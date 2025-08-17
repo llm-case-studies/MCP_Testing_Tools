@@ -1,0 +1,93 @@
+version: '3.8'
+
+services:
+  mcp-debug-wizard:
+    build: .
+    container_name: "MCP-Debug-Wizard"
+    ports:
+      - "9090:9090"  # Main web interface (avoiding popular 8000)
+      - "9091:9091"  # Mock server
+      - "9092:9092"  # Proxy server
+    volumes:
+      # Mount host MCP configurations (read-only)
+      - ~/.claude.json:/mcp-configs/.claude.json:ro
+      - ~/.gemini:/mcp-configs/.gemini:ro
+      # Mount workspace for testing (read-write)
+      - ./workspace:/workspace:rw
+      # Mount logs directory
+      - ./logs:/app/logs:rw
+      # Mount host user's .cache for UV/pip cache (optional performance boost)
+      - ~/.cache:/home/mcpuser/.cache:rw
+    environment:
+      - MCP_CONFIG_DIR=/mcp-configs
+      - WORKSPACE_DIR=/workspace
+      - LOG_LEVEL=INFO
+      - PYTHONUNBUFFERED=1
+    networks:
+      - mcp-net
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9090/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Optional: Run all three services separately for debugging
+  mcp-mock-genie:
+    build: .
+    container_name: "MCP-Mock-Genie"
+    command: ["python", "mock_server.py"]
+    ports:
+      - "9091:9091"
+    volumes:
+      - ./logs:/app/logs:rw
+    networks:
+      - mcp-net
+    profiles:
+      - debug
+
+  mcp-proxy-spy:
+    build: .
+    container_name: "MCP-Proxy-Spy"
+    command: ["python", "mcp_proxy.py"]
+    ports:
+      - "9092:9092"
+    volumes:
+      - ~/.claude.json:/mcp-configs/.claude.json:ro
+      - ~/.gemini:/mcp-configs/.gemini:ro
+      - ./workspace:/workspace:rw
+      - ./logs:/app/logs:rw
+    environment:
+      - MCP_CONFIG_DIR=/mcp-configs
+    networks:
+      - mcp-net
+    profiles:
+      - debug
+
+  mcp-web-portal:
+    build: .
+    container_name: "MCP-Web-Portal"
+    command: ["python", "web_interface.py"]
+    ports:
+      - "9090:9090"
+    volumes:
+      - ~/.claude.json:/mcp-configs/.claude.json:ro
+      - ~/.gemini:/mcp-configs/.gemini:ro
+      - ./workspace:/workspace:rw
+      - ./logs:/app/logs:rw
+    environment:
+      - MCP_CONFIG_DIR=/mcp-configs
+      - MOCK_SERVER_URL=http://mcp-mock-genie:9091
+      - PROXY_SERVER_URL=http://mcp-proxy-spy:9092
+    networks:
+      - mcp-net
+    profiles:
+      - debug
+    depends_on:
+      - mcp-mock-genie
+      - mcp-proxy-spy
+
+networks:
+  mcp-net:
+    driver: bridge

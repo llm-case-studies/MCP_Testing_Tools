@@ -1,0 +1,187 @@
+{
+  "mcpServers": {
+    "brave-search": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "description": "🔍 Brave Search MCP - Web search capabilities with privacy focus",
+      "capabilities": [
+        "web_search",
+        "real_time_information",
+        "search_results",
+        "privacy_focused"
+      ],
+      "use_cases": [
+        "Search current web information",
+        "Find real-time data and news",
+        "Research topics with privacy protection",
+        "Verify information against web sources"
+      ],
+      "best_for": "When you need up-to-date web information or research capabilities",
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      }
+    },
+    "playwright": {
+      "type": "stdio",
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest"
+      ],
+      "description": "🎭 Browser automation and E2E testing - Create, run, and debug web tests",
+      "capabilities": [
+        "web_testing",
+        "browser_automation",
+        "screenshots",
+        "form_filling",
+        "page_navigation"
+      ],
+      "use_cases": [
+        "Create E2E tests for web applications",
+        "Automate browser interactions and form submissions",
+        "Take screenshots and generate visual reports",
+        "Validate web application functionality",
+        "Test responsive design across viewports",
+        "Monitor website uptime and performance"
+      ],
+      "best_for": "When user needs browser automation, web testing, or site validation",
+      "env": {}
+    },
+    "shell-devtools": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-shell-server"
+      ],
+      "description": "🛠️ Development tools via shell commands - Code quality, linting, and validation",
+      "capabilities": [
+        "code_linting",
+        "shell_validation",
+        "config_checking",
+        "syntax_analysis"
+      ],
+      "use_cases": [
+        "Run ESLint on JavaScript/TypeScript files",
+        "Validate shell scripts with ShellCheck",
+        "Check Nginx configuration syntax and security",
+        "Format code with Prettier",
+        "Analyze code quality and style issues",
+        "Validate configuration files"
+      ],
+      "best_for": "When user needs code linting, shell script validation, or config file checking",
+      "env": {
+        "ALLOW_COMMANDS": "eslint,shellcheck,nginx,gixy,nginxfmt,prettier,npx,node,python3"
+      }
+    },
+    "qdrant-memory": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "mcp-server-qdrant"
+      ],
+      "description": "🧠 Qdrant Vector Memory System - Store and retrieve contextual memories using vector embeddings",
+      "capabilities": [
+        "vector_storage",
+        "semantic_search",
+        "memory_persistence",
+        "embedding_generation"
+      ],
+      "use_cases": [
+        "Store conversation context and project knowledge",
+        "Retrieve relevant memories based on semantic similarity",
+        "Build persistent knowledge base across sessions",
+        "Search through historical context using natural language",
+        "Create intelligent memory associations"
+      ],
+      "best_for": "When user needs persistent memory across conversations or semantic knowledge retrieval",
+      "env": {
+        "QDRANT_URL": "http://acer-hl.local:7333",
+        "QDRANT_API_KEY": "",
+        "COLLECTION_NAME": "shared_memories",
+        "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2"
+      }
+    },
+    "serena-mcp": {
+      "type": "stdio",
+      "command": "serena-mcp-server",
+      "args": [],
+      "description": "🧠 Advanced code analysis + Memory system with semantic search - Deep codebase insights with persistent knowledge",
+      "capabilities": [
+        "semantic_analysis",
+        "code_navigation",
+        "symbol_search",
+        "refactoring",
+        "memory_management",
+        "semantic_memory_search",
+        "persistent_knowledge",
+        "project_context"
+      ],
+      "use_cases": [
+        "Navigate large codebases semantically",
+        "Find symbol definitions and references",
+        "Perform intelligent code refactoring",
+        "Store and retrieve project knowledge with semantic search",
+        "Maintain persistent memories across development sessions",
+        "Document architectural decisions and patterns",
+        "Search project context and historical decisions",
+        "Resume work with full context from previous sessions"
+      ],
+      "best_for": "When user needs deep code analysis, refactoring, or codebase understanding",
+      "env": {},
+      "memory_features": [
+        "write_memory: Store project insights and decisions",
+        "read_memory: Retrieve specific project knowledge",
+        "list_memories: Browse all stored project memories",
+        "delete_memory: Clean up outdated information",
+        "Project-isolated storage in .serena/memories/",
+        "Markdown format for human-readable knowledge base"
+      ]
+    },
+    "context7": {
+      "type": "stdio",
+      "command": "context7-mcp",
+      "args": [],
+      "description": "📚 Library documentation and API reference - Up-to-date docs for any library",
+      "capabilities": [
+        "library_docs",
+        "api_reference",
+        "code_examples",
+        "best_practices"
+      ],
+      "use_cases": [
+        "Get current documentation for any library",
+        "Find API usage examples and patterns",
+        "Look up function signatures and parameters",
+        "Discover best practices for frameworks",
+        "Find migration guides and changelogs",
+        "Access comprehensive coding examples"
+      ],
+      "best_for": "When user needs library documentation, API references, or coding examples",
+      "env": {}
+    },
+    "firecrawl": {
+      "type": "stdio",
+      "command": "firecrawl-mcp",
+      "args": [],
+      "description": "🔥 Web crawling and data extraction - Scrape websites and extract structured data",
+      "capabilities": [
+        "web_scraping",
+        "data_extraction",
+        "site_crawling",
+        "content_analysis"
+      ],
+      "use_cases": [
+        "Scrape website content and data",
+        "Extract structured information from web pages",
+        "Monitor website changes and updates",
+        "Collect research data from multiple sites",
+        "Generate datasets from web sources",
+        "Analyze competitor websites"
+      ],
+      "best_for": "When user needs web scraping, data extraction, or website content analysis",
+      "env": {
+        "FIRECRAWL_API_KEY": "your_api_key_here"
+      }
+    }
+  }
+}
