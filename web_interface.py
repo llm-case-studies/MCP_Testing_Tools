@@ -286,30 +286,156 @@ async def clear_test_results():
     return {"message": "Test results cleared"}
 
 @app.post("/api/discover-servers")
-async def discover_servers():
-    """Auto-discover MCP servers from mounted configurations"""
+async def discover_servers(custom_path: Optional[str] = None):
+    """Auto-discover MCP servers from mounted configurations or custom path"""
     from config_discovery import MCPConfigDiscovery
     
-    # Use mounted config directory or fallback to local
-    config_dir = os.environ.get("MCP_CONFIG_DIR", "/mcp-configs")
-    if not os.path.exists(config_dir):
-        config_dir = os.path.expanduser("~")  # Fallback for local testing
+    # Use custom path, mounted config directory, or fallback to local
+    if custom_path:
+        config_dir = custom_path
+    else:
+        config_dir = os.environ.get("MCP_CONFIG_DIR", "/mcp-configs")
+        if not os.path.exists(config_dir):
+            config_dir = os.path.expanduser("~")  # Fallback for local testing
     
     discovery = MCPConfigDiscovery(config_dir)
     discovered = discovery.discover_servers()
     
-    # Add validation information
+    # Add detailed discovery information
+    discovery_sources = {
+        "claude_config": os.path.join(config_dir, ".claude.json"),
+        "gemini_config": os.path.join(config_dir, ".gemini"),
+        "project_mcp": "./.mcp.json",
+        "config_dir_used": config_dir
+    }
+    
+    # Check which sources exist and were used
+    sources_found = {}
+    for source_name, path in discovery_sources.items():
+        if os.path.exists(path):
+            if source_name == "gemini_config":
+                sources_found[source_name] = f"{path} (directory)"
+            else:
+                sources_found[source_name] = path
+    
+    # Add validation and execution information
     for server in discovered:
         validation = discovery.validate_server_config(server)
         capabilities = discovery.get_server_capabilities(server)
         server["validation"] = validation
         server["capabilities"] = capabilities
+        
+        # Add execution readiness info
+        server["execution_info"] = {
+            "command_available": True,  # We'll check this properly later
+            "can_activate": server["validation"]["valid"],
+            "ready_to_test": server["validation"]["valid"] and len(server["validation"]["issues"]) == 0
+        }
     
     return {
         "discovered": discovered,
-        "config_dir": config_dir,
-        "total_servers": len(discovered)
+        "total_servers": len(discovered),
+        "discovery_sources": discovery_sources,
+        "sources_found": sources_found,
+        "config_dir": config_dir
     }
+
+@app.post("/api/activate-server/{server_name}")
+async def activate_discovered_server(server_name: str):
+    """Activate a discovered server by making it available for testing"""
+    from config_discovery import MCPConfigDiscovery
+    
+    # Rediscover to get latest info
+    config_dir = os.environ.get("MCP_CONFIG_DIR", "/mcp-configs")
+    if not os.path.exists(config_dir):
+        config_dir = os.path.expanduser("~")
+    
+    discovery = MCPConfigDiscovery(config_dir)
+    discovered = discovery.discover_servers()
+    
+    # Find the server
+    target_server = None
+    for server in discovered:
+        if server["name"] == server_name:
+            target_server = server
+            break
+    
+    if not target_server:
+        raise HTTPException(status_code=404, detail=f"Server '{server_name}' not found in discovered servers")
+    
+    # Check if server is valid for activation
+    validation = discovery.validate_server_config(target_server)
+    if not validation["valid"]:
+        raise HTTPException(status_code=400, detail=f"Server '{server_name}' failed validation: {validation['issues']}")
+    
+    # Create clean server name (remove source prefixes)
+    clean_name = server_name.replace("claude_", "").replace("gemini_", "").replace("test_", "")
+    
+    # Prepare server config for activation
+    server_config = ServerConfig(
+        name=clean_name,
+        type=target_server["type"],
+        command=target_server["command"],
+        description=target_server.get("description", f"Activated {clean_name} server")
+    )
+    
+    # Add to active servers
+    servers[clean_name] = server_config.dict()
+    
+    return {
+        "message": f"Server '{clean_name}' activated successfully",
+        "original_name": server_name,
+        "activated_name": clean_name,
+        "server_config": server_config.dict(),
+        "validation": validation
+    }
+
+@app.post("/api/test-discovered/{server_name}")
+async def test_discovered_server(server_name: str):
+    """Test a discovered server without activating it permanently"""
+    from config_discovery import MCPConfigDiscovery
+    import subprocess
+    import json
+    
+    # Rediscover to get latest info
+    config_dir = os.environ.get("MCP_CONFIG_DIR", "/mcp-configs")
+    if not os.path.exists(config_dir):
+        config_dir = os.path.expanduser("~")
+    
+    discovery = MCPConfigDiscovery(config_dir)
+    discovered = discovery.discover_servers()
+    
+    # Find the server
+    target_server = None
+    for server in discovered:
+        if server["name"] == server_name:
+            target_server = server
+            break
+    
+    if not target_server:
+        raise HTTPException(status_code=404, detail=f"Server '{server_name}' not found")
+    
+    # For now, just return server info and validation
+    # TODO: Implement actual MCP communication test
+    validation = discovery.validate_server_config(target_server)
+    capabilities = discovery.get_server_capabilities(target_server)
+    
+    test_result = {
+        "server_name": server_name,
+        "command": target_server["command"],
+        "type": target_server["type"],
+        "validation": validation,
+        "capabilities": capabilities,
+        "test_status": "validation_only",  # Will add real testing later
+        "notes": "This endpoint currently performs validation checks. Full MCP communication testing coming soon."
+    }
+    
+    if target_server["type"] == "stdio":
+        test_result["execution_notes"] = f"Would execute: {' '.join(target_server['command'])}"
+    elif target_server["type"] == "http":
+        test_result["execution_notes"] = f"Would connect to: {target_server.get('url', 'No URL specified')}"
+    
+    return test_result
 
 # Serve the frontend (basic HTML)
 @app.get("/", response_class=HTMLResponse)
@@ -357,24 +483,188 @@ async def serve_frontend():
         </div>
         
         <script>
-            // Basic JavaScript for testing
+            // Enhanced JavaScript with DOM updates
             async function discoverServers() {
-                const response = await fetch('/api/discover-servers', {method: 'POST'});
-                const data = await response.json();
-                console.log('Discovered servers:', data);
+                try {
+                    const response = await fetch('/api/discover-servers', {method: 'POST'});
+                    const data = await response.json();
+                    console.log('Discovered servers:', data);
+                    
+                    // Update the servers section
+                    const serversDiv = document.getElementById('servers');
+                    serversDiv.innerHTML = '<h3>Discovered Servers (' + data.total_servers + ')</h3>';
+                    
+                    data.discovered.forEach(server => {
+                        const serverDiv = document.createElement('div');
+                        serverDiv.style.border = '1px solid #ccc';
+                        serverDiv.style.margin = '10px 0';
+                        serverDiv.style.padding = '10px';
+                        serverDiv.style.backgroundColor = '#f9f9f9';
+                        
+                        let toolsHtml = '';
+                        if (server.name.includes('qdrant')) {
+                            toolsHtml = `
+                                <div style="margin-top: 10px;">
+                                    <h5>Qdrant Memory Tools:</h5>
+                                    <button onclick="testQdrantStore('${server.name}')">Test Store</button>
+                                    <button onclick="testQdrantFind('${server.name}')">Test Find</button>
+                                </div>
+                                <div id="qdrant-results-${server.name.replace(/[^a-zA-Z0-9]/g, '')}" style="margin-top: 10px;"></div>
+                            `;
+                        }
+                        
+                        serverDiv.innerHTML = `
+                            <h4>${server.name} (${server.type})</h4>
+                            <p><strong>Source:</strong> ${server.source}</p>
+                            <p><strong>Description:</strong> ${server.description}</p>
+                            <p><strong>Capabilities:</strong> ${Object.keys(server.capabilities).filter(k => server.capabilities[k]).join(', ')}</p>
+                            ${server.validation.warnings.length > 0 ? '<p><strong>Warnings:</strong> ' + server.validation.warnings.join(', ') + '</p>' : ''}
+                            ${toolsHtml}
+                        `;
+                        serversDiv.appendChild(serverDiv);
+                    });
+                } catch (error) {
+                    console.error('Error discovering servers:', error);
+                    document.getElementById('servers').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+                }
+            }
+            
+            async function testQdrantStore(serverName) {
+                try {
+                    const testData = {
+                        information: "Testing MCP Testing Suite UI integration with Qdrant at " + new Date().toISOString(),
+                        metadata: {"source": "web_ui", "server": serverName, "test": true}
+                    };
+                    
+                    // For now, show what would be stored
+                    const resultDiv = document.getElementById('qdrant-results-' + serverName.replace(/[^a-zA-Z0-9]/g, ''));
+                    resultDiv.innerHTML = `
+                        <p style="color: blue;"><strong>Store Test (Demo):</strong></p>
+                        <pre>${JSON.stringify(testData, null, 2)}</pre>
+                        <p><em>Note: This would store the above data in ${serverName}</em></p>
+                    `;
+                } catch (error) {
+                    console.error('Error testing Qdrant store:', error);
+                }
+            }
+            
+            async function testQdrantFind(serverName) {
+                try {
+                    const query = "MCP Testing Suite";
+                    
+                    // For now, show what would be searched
+                    const resultDiv = document.getElementById('qdrant-results-' + serverName.replace(/[^a-zA-Z0-9]/g, ''));
+                    resultDiv.innerHTML = `
+                        <p style="color: green;"><strong>Find Test (Demo):</strong></p>
+                        <p>Searching for: "${query}"</p>
+                        <p><em>Note: This would search ${serverName} for memories matching "${query}"</em></p>
+                    `;
+                } catch (error) {
+                    console.error('Error testing Qdrant find:', error);
+                }
             }
             
             async function testMockServer() {
-                const response = await fetch('/api/servers/mock_server/test-connection', {method: 'POST'});
-                const data = await response.json();
-                console.log('Mock server test:', data);
+                try {
+                    const response = await fetch('/api/servers/mock_server/test-connection', {method: 'POST'});
+                    const data = await response.json();
+                    console.log('Mock server test:', data);
+                    
+                    const logsDiv = document.getElementById('logs');
+                    logsDiv.innerHTML = '<h3>Mock Server Test Result</h3><pre>' + JSON.stringify(data, null, 2) + '</pre>';
+                } catch (error) {
+                    console.error('Error testing mock server:', error);
+                    document.getElementById('logs').innerHTML = '<p style="color: red;">Error: ' + error.message + '</p>';
+                }
             }
             
-            // More functions would be added for a full interface
+            async function loadActiveServers() {
+                try {
+                    const response = await fetch('/api/servers');
+                    const data = await response.json();
+                    console.log('Active servers:', data);
+                    
+                    const serversDiv = document.getElementById('servers');
+                    let html = '<h3>Active Servers (' + data.servers.length + ')</h3>';
+                    
+                    if (data.servers.length === 0) {
+                        html += '<p>No active servers. Click "Discover Servers" to find available servers.</p>';
+                    } else {
+                        data.servers.forEach(server => {
+                            html += `
+                                <div style="border: 1px solid #ccc; margin: 10px 0; padding: 10px;">
+                                    <h4>${server.name}</h4>
+                                    <p><strong>Type:</strong> ${server.type}</p>
+                                    <p><strong>Description:</strong> ${server.description || 'No description'}</p>
+                                    ${server.command ? '<p><strong>Command:</strong> ' + server.command.join(' ') + '</p>' : ''}
+                                    <button onclick="testServer('${server.name}')">Test Connection</button>
+                                    <button onclick="listTools('${server.name}')">List Tools</button>
+                                </div>
+                            `;
+                        });
+                    }
+                    
+                    serversDiv.innerHTML = html;
+                } catch (error) {
+                    console.error('Error loading active servers:', error);
+                    document.getElementById('servers').innerHTML = '<p style="color: red;">Error loading servers: ' + error.message + '</p>';
+                }
+            }
+            
+            async function testServer(serverName) {
+                try {
+                    const response = await fetch(`/api/servers/${serverName}/test-connection`, {method: 'POST'});
+                    const data = await response.json();
+                    alert('Test result: ' + JSON.stringify(data, null, 2));
+                } catch (error) {
+                    alert('Error testing server: ' + error.message);
+                }
+            }
+            
+            async function listTools(serverName) {
+                try {
+                    const response = await fetch(`/api/servers/${serverName}/tools`);
+                    const data = await response.json();
+                    alert('Tools: ' + JSON.stringify(data, null, 2));
+                } catch (error) {
+                    alert('Error listing tools: ' + error.message);
+                }
+            }
+
+            async function activateServer(name, type, command, description) {
+                try {
+                    const commandArray = command.split(' ');
+                    const serverData = {
+                        name: name.replace(/^(claude_|gemini_)/, ''), // Remove prefix
+                        type: type,
+                        command: commandArray,
+                        description: description
+                    };
+                    
+                    const response = await fetch('/api/servers', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(serverData)
+                    });
+                    
+                    const result = await response.json();
+                    alert('Server activated: ' + result.message);
+                    loadActiveServers(); // Refresh active servers list
+                } catch (error) {
+                    alert('Error activating server: ' + error.message);
+                }
+            }
+
+            // Auto-load active servers and discover on page load
+            window.onload = function() {
+                loadActiveServers();
+                // Don't call discoverServers automatically to avoid overwriting active servers
+                // User can click "Discover Servers" button when needed
+            };
         </script>
     </body>
     </html>
     """
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=9090)
+    uvicorn.run(app, host="0.0.0.0", port=8094)

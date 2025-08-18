@@ -6,7 +6,6 @@ RUN apt-get update && apt-get install -y \
     git \
     nodejs \
     npm \
-    uvx \
     && rm -rf /var/lib/apt/lists/*
 
 # Install UV for Python package management (used by many MCP servers)
