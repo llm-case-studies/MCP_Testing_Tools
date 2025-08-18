@@ -1,0 +1,86 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-playwright"],
+      "description": "Web automation and testing tools",
+      "timeout": 30000
+    },
+    "filesystem": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-filesystem", "/media/alex/LargeStorage/Projects"],
+      "description": "File system operations",
+      "timeout": 10000,
+      "includeTools": ["read_file", "write_file", "list_directory"]
+    },
+    "github": {
+      "command": "docker",
+      "args": [
+        "run",
+        "-i",
+        "--rm",
+        "-e",
+        "GITHUB_PERSONAL_ACCESS_TOKEN",
+        "ghcr.io/github/github-mcp-server"
+      ],
+      "env": {
+        "GITHUB_PERSONAL_ACCESS_TOKEN": "${GITHUB_PERSONAL_ACCESS_TOKEN}"
+      },
+      "description": "GitHub repository management",
+      "timeout": 15000
+    },
+    "brave-search": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-brave-search"],
+      "env": {
+        "BRAVE_API_KEY": "${BRAVE_API_KEY}"
+      },
+      "description": "Web search via Brave API",
+      "timeout": 10000
+    },
+    "fetch": {
+      "command": "npx",
+      "args": ["-y", "@modelcontextprotocol/server-fetch"],
+      "description": "Web content fetching and scraping",
+      "timeout": 20000
+    },
+    "serena-mcp": {
+      "command": "serena-mcp-server",
+      "args": [],
+      "description": "🧠 Advanced code analysis + Memory system with semantic search",
+      "timeout": 30000
+    },
+    "qdrant-memory": {
+      "command": "uvx",
+      "args": ["mcp-server-qdrant"],
+      "env": {
+        "QDRANT_URL": "http://acer-hl.local:7333",
+        "QDRANT_API_KEY": "",
+        "COLLECTION_NAME": "shared_memories",
+        "EMBEDDING_MODEL": "sentence-transformers/all-MiniLM-L6-v2"
+      },
+      "description": "🧠 Qdrant Vector Memory System - Store and retrieve contextual memories",
+      "timeout": 15000
+    },
+    "shell-devtools": {
+      "command": "uvx",
+      "args": ["mcp-shell-server"],
+      "env": {
+        "ALLOW_COMMANDS": "eslint,shellcheck,nginx,gixy,nginxfmt,prettier,npx,node,python3"
+      },
+      "description": "🛠️ Development tools via shell commands - Code quality, linting, and validation",
+      "timeout": 20000
+    },
+    "context7": {
+      "command": "context7-mcp",
+      "args": [],
+      "description": "📚 Library documentation and API reference - Up-to-date docs for any library",
+      "timeout": 30000
+    }
+  },
+  "theme": "GitHub",
+  "autoAccept": false,
+  "usageStatisticsEnabled": true,
+  "hideTips": false,
+  "contextFileName": "GEMINI.md"
+}

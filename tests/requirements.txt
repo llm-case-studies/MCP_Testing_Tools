@@ -1,0 +1,14 @@
+# Test dependencies for MCP Postman functionality
+pytest>=7.0.0
+pytest-asyncio>=0.21.0
+requests>=2.28.0
+fastapi>=0.100.0
+httpx>=0.24.0
+uvicorn>=0.20.0
+
+# For mocking and test utilities
+pytest-mock>=3.10.0
+responses>=0.23.0
+
+# For coverage reporting
+pytest-cov>=4.0.0
