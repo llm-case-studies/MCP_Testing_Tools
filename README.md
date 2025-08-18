@@ -1,43 +1,47 @@
-# MCP Testing Suite
+# MCP Testing Suite V2
 
-A comprehensive containerized testing environment for Model Context Protocol (MCP) servers.
+A comprehensive testing environment for Model Context Protocol (MCP) servers with dynamic project launching and Postman-like tool testing.
 
 ## Features
 
-🔧 **Mock MCP Server** - HTTP-based mock server for testing MCP protocol
-🔄 **Communication Proxy** - Intercept and debug MCP stdio communication  
-🌐 **Web Interface** - Visual testing and debugging interface
-🐳 **Containerized** - Isolated testing environment with volume mounts
-📊 **Logging & Analytics** - Real-time communication monitoring
+🚀 **V2 Dynamic Launcher** - Project-based MCP testing with session management
+🧪 **MCP Postman** - Interactive tool testing interface like Postman for APIs
 🔍 **Auto-Discovery** - Finds MCP servers from Claude/Gemini configs
+🎛️ **Session Management** - Multi-project testing with isolated containers
+📂 **Project Scanner** - Automatic detection of MCP-enabled projects
+🐳 **Containerized Backends** - Isolated testing environments
+📊 **Request History** - Track and replay MCP tool calls
+🔧 **Sample Generation** - Auto-generate test requests from tool schemas
 
 ## Quick Start
 
 ```bash
-# Clone and start
+# Clone repository
 git clone <repo>
 cd MCP_Testing_Tools
-chmod +x start.sh
-./start.sh
+
+# Start the launcher
+cd launcher
+python3 main.py
 ```
 
-Open http://localhost:8094 in your browser.
+Open http://localhost:8094 in your browser to access the Dynamic Launcher.
 
-## Architecture
+## Architecture V2
 
-### Current Services (V1) 🧙‍♂️
+### 🚀 Dynamic Launcher (Port 8094)
+The main interface for project management and MCP testing:
+- **Project Scanner**: Automatically find MCP-enabled projects
+- **Session Management**: Launch isolated testing backends per project
+- **MCP Postman**: Interactive tool testing with request history
+- **Configuration Discovery**: Auto-detect Claude/Gemini MCP configs
 
-- **Port 8094**: 📱 Web Portal (main interface & API)
-- **Port 8095**: 🧞 Mock Genie (HTTP MCP simulator)  
-- **Port 8096**: 🕵️ Proxy Spy (stdio interceptor)
-
-### 🚀 **Coming Soon: V2 Dynamic Launcher** 
-See [V2 Architecture Documentation](docs/architecture/v2-dynamic-launcher.md) for the next-generation design:
-- **Dynamic project launcher** with custom config support
-- **Project-level MCP configurations** (`.mcp.json`)
-- **Team collaboration** with shared config repositories  
-- **Multi-session testing** for different projects simultaneously
-- **CI/CD integration** ready
+### 🐳 Dynamic Backend Containers (Port 8095+)
+Isolated testing environments launched per project:
+- **Port 8095+**: Project-specific backend APIs
+- **MCP Server Discovery**: Runtime server introspection
+- **Tool Execution**: Real MCP tool calling with logging
+- **Request Tracking**: History and collections management
 
 ### Volume Mounts
 
@@ -48,92 +52,126 @@ See [V2 Architecture Documentation](docs/architecture/v2-dynamic-launcher.md) fo
 
 ## Usage
 
-### 1. Discover MCP Servers
+### 1. 📂 Project Management
 
-The suite automatically discovers MCP servers from:
-- Claude configuration (`~/.claude.json`)
-- Gemini configuration (`~/.gemini/`)
-- Built-in test servers
+**Scan for MCP Projects:**
+1. Use the Project Scanner to find MCP-enabled projects
+2. Browse directories or specify project paths
+3. Review detected MCP configurations and servers
+4. Launch isolated testing backends for each project
 
-### 2. Test Communication
+**Manual Project Launch:**
+- Specify project path and config source
+- Choose from project/user/custom configurations  
+- Launch dedicated backend container
 
-**Mock Genie Testing:**
+### 2. 🧪 MCP Postman - Tool Testing
+
+**Interactive Testing Interface:**
+1. Click "Open MCP Tool Tester" from the launcher
+2. Select active testing session
+3. Discover available MCP servers
+4. Browse tools and their schemas
+5. Craft custom requests with JSON arguments
+6. Execute tools and view detailed results
+7. Track request history and build collections
+
+**API Integration:**
 ```bash
-curl -X POST http://localhost:9091/mcp \
+# Discover MCP servers
+curl http://localhost:8095/api/mcp/discover
+
+# Get tools for a server
+curl http://localhost:8095/api/mcp/tools/server-name
+
+# Execute a tool
+curl -X POST http://localhost:8095/api/mcp/call-tool/server-name \
   -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":"1","method":"tools/list"}'
+  -d '{"tool_name":"test","arguments":{"param":"value"}}'
+
+# Get request history
+curl http://localhost:8095/api/mcp/history
 ```
 
-**Proxy Spy Testing:**
-```bash
-# Start proxy with a real MCP server
-curl -X POST http://localhost:9092/proxy/start \
-  -H "Content-Type: application/json" \
-  -d '{"command":["uvx","mcp-server-filesystem","/workspace"]}'
-
-# Send commands through proxy
-curl -X POST http://localhost:9092/proxy/send \
-  -H "Content-Type: application/json" \
-  -d '{"jsonrpc":"2.0","id":"1","method":"tools/list"}'
-```
-
-### 3. Web Portal
+### 3. 🎛️ Session Management
 
 Navigate to http://localhost:8094 for:
-- Server discovery and configuration
-- Interactive tool testing
-- Real-time communication logs
-- Test suite management
+- Project discovery and configuration
+- Multi-session testing management
+- MCP server introspection  
+- Real-time tool execution logs
+- Request history and collections
 
-## Container stdio Compatibility
+## MCP Server Compatibility
 
-✅ **Full stdio support** - MCP servers communicate via stdin/stdout
-✅ **Process isolation** - Each server runs in isolated subprocess
-✅ **Real-time monitoring** - Live stream of communication
-✅ **Error injection** - Test error handling and resilience
+✅ **stdio Protocol** - Full MCP JSON-RPC over stdin/stdout
+✅ **HTTP Protocol** - Direct HTTP MCP server support  
+✅ **Auto-Discovery** - Finds servers from Claude/Gemini configs
+✅ **Dynamic Loading** - Runtime server discovery and introspection
+✅ **Tool Schema Support** - Automatic request generation from schemas
+✅ **Real-time Execution** - Live tool calling with detailed logging
 
 ## Development
 
-### Running Individual Services
+### Running the Test Suite
 
 ```bash
-# All-in-one (default)
-docker-compose up
+# Run comprehensive test suite
+./run_mcp_postman_tests.sh
 
-# Individual services for debugging
-docker-compose --profile debug up
+# Individual test categories
+python3 -m pytest tests/test_mcp_postman_api.py -v           # Backend API tests
+python3 -m pytest launcher/tests/test_mcp_postman_integration.py -v  # Integration tests
+python3 test_mcp_postman_e2e.py                             # End-to-end tests
 ```
 
-### Adding Custom MCP Servers
+### Architecture Components
 
-1. Mount server code into `/workspace`
-2. Add configuration via web interface
-3. Test through proxy or direct HTTP calls
+**Launcher (`launcher/main.py`)**:
+- FastAPI web interface on port 8094
+- Project scanning and session management
+- MCP Postman UI with modal interface
+- RESTful APIs for frontend interaction
 
-### Custom Filters
+**Backend (`web_interface.py`)**:
+- Dynamic container orchestration  
+- MCP server discovery and tool execution
+- Request history and collections
+- JSON-RPC protocol handling
 
-The proxy supports custom filters for:
-- Message delays
-- Error injection  
-- Content modification
-- Protocol debugging
+### Adding Custom Projects
+
+1. Create project directory with MCP configuration
+2. Use Project Scanner to detect and launch
+3. Test via MCP Postman interface
+4. Build request collections for CI/CD
 
 ## Debugging
 
-### View Logs
+### View Launcher Logs
 ```bash
-docker-compose logs -f
-docker-compose logs mcp-testing
+# In launcher directory
+python3 main.py  # Direct output to console
+
+# Check session logs
+curl http://localhost:8094/api/sessions
 ```
 
-### Shell Access
-```bash
-docker-compose exec mcp-testing bash
+### View Backend Logs
+```bash  
+# Backend containers log to their respective sessions
+# Access via launcher session management interface
 ```
 
-### Configuration Discovery Test
+### Test Configuration Discovery
 ```bash
-docker-compose exec mcp-testing python config_discovery.py
+# Test MCP server discovery
+python3 -c "
+from config_discovery import MCPConfigDiscovery
+discovery = MCPConfigDiscovery('/path/to/configs')
+servers = discovery.discover_servers()
+print(f'Found {len(servers)} servers')
+"
 ```
 
 ## Security
@@ -149,27 +187,41 @@ docker-compose exec mcp-testing python config_discovery.py
 
 **Port Conflicts:**
 ```bash
-# Check what's using ports
-netstat -tulpn | grep :909[0-2]
-# Stop conflicting services or change ports in docker-compose.yml
+# Check what's using ports 8094+
+lsof -i :8094
+lsof -i :8095
+# Stop conflicting services
+kill -9 <PID>
 ```
 
-**Mount Issues:**
+**MCP Server Discovery Issues:**
 ```bash
 # Verify config files exist
 ls -la ~/.claude.json ~/.gemini/
-# Check permissions
-docker-compose exec mcp-testing ls -la /mcp-configs/
+# Test manual discovery
+python3 -c "
+from config_discovery import MCPConfigDiscovery
+discovery = MCPConfigDiscovery('.')
+print(discovery.discover_servers())
+"
 ```
 
-**stdio Problems:**
+**Session Launch Problems:**
 ```bash
-# Test basic communication
-docker-compose exec mcp-testing python -c "
-import subprocess
-proc = subprocess.Popen(['echo', 'hello'], stdout=subprocess.PIPE)
-print(proc.stdout.read())
-"
+# Check Docker is running
+docker ps
+# Verify project paths are accessible
+ls -la /path/to/project
+# Check session status via API
+curl http://localhost:8094/api/sessions
+```
+
+**MCP Postman Interface Issues:**
+```bash
+# Clear browser cache
+# Check browser console for JavaScript errors
+# Verify active sessions exist
+curl http://localhost:8094/api/sessions
 ```
 
 ## Contributing

@@ -25,6 +25,7 @@ class ProjectScanner:
         
         self.user_config_files = [
             ".claude.json",
+            ".gemini/settings.json",
             ".gemini/config.json",
             ".gemini/mcp.json"
         ]
@@ -129,9 +130,9 @@ class ProjectScanner:
                     servers = config_data
                 
                 description = config_data.get("description", f"MCP config with {len(servers)} servers")
-            elif "gemini" in str(config_path):
-                # Handle Gemini config structure
-                servers = config_data.get("servers", config_data)
+            elif "gemini" in str(config_path) or config_path.name == "settings.json":
+                # Handle Gemini CLI config structure (.gemini/settings.json)
+                servers = config_data.get("mcpServers", {})
                 description = f"Gemini config with {len(servers)} servers"
             
             if not servers:
