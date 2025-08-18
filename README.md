@@ -21,15 +21,23 @@ chmod +x start.sh
 ./start.sh
 ```
 
-Open http://localhost:9090 in your browser.
+Open http://localhost:8094 in your browser.
 
 ## Architecture
 
-### Magical Services 🧙‍♂️
+### Current Services (V1) 🧙‍♂️
 
-- **Port 9090**: 📱 Web Portal (main interface & API)
-- **Port 9091**: 🧞 Mock Genie (HTTP MCP simulator)  
-- **Port 9092**: 🕵️ Proxy Spy (stdio interceptor)
+- **Port 8094**: 📱 Web Portal (main interface & API)
+- **Port 8095**: 🧞 Mock Genie (HTTP MCP simulator)  
+- **Port 8096**: 🕵️ Proxy Spy (stdio interceptor)
+
+### 🚀 **Coming Soon: V2 Dynamic Launcher** 
+See [V2 Architecture Documentation](docs/architecture/v2-dynamic-launcher.md) for the next-generation design:
+- **Dynamic project launcher** with custom config support
+- **Project-level MCP configurations** (`.mcp.json`)
+- **Team collaboration** with shared config repositories  
+- **Multi-session testing** for different projects simultaneously
+- **CI/CD integration** ready
 
 ### Volume Mounts
 
@@ -71,7 +79,7 @@ curl -X POST http://localhost:9092/proxy/send \
 
 ### 3. Web Portal
 
-Navigate to http://localhost:9090 for:
+Navigate to http://localhost:8094 for:
 - Server discovery and configuration
 - Interactive tool testing
 - Real-time communication logs

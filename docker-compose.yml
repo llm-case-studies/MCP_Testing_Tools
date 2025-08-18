@@ -5,9 +5,9 @@ services:
     build: .
     container_name: "MCP-Debug-Wizard"
     ports:
-      - "9090:9090"  # Main web interface (avoiding popular 8000)
-      - "9091:9091"  # Mock server
-      - "9092:9092"  # Proxy server
+      - "8094:8094"  # Main web interface (avoiding conflicts)
+      - "8095:8095"  # Mock server
+      - "8096:8096"  # Proxy server
     volumes:
       # Mount host MCP configurations (read-only)
       - ~/.claude.json:/mcp-configs/.claude.json:ro
@@ -27,7 +27,7 @@ services:
       - mcp-net
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9090/"]
+      test: ["CMD", "curl", "-f", "http://localhost:8094/"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -39,7 +39,7 @@ services:
     container_name: "MCP-Mock-Genie"
     command: ["python", "mock_server.py"]
     ports:
-      - "9091:9091"
+      - "8095:8095"
     volumes:
       - ./logs:/app/logs:rw
     networks:
@@ -52,7 +52,7 @@ services:
     container_name: "MCP-Proxy-Spy"
     command: ["python", "mcp_proxy.py"]
     ports:
-      - "9092:9092"
+      - "8096:8096"
     volumes:
       - ~/.claude.json:/mcp-configs/.claude.json:ro
       - ~/.gemini:/mcp-configs/.gemini:ro
@@ -70,7 +70,7 @@ services:
     container_name: "MCP-Web-Portal"
     command: ["python", "web_interface.py"]
     ports:
-      - "9090:9090"
+      - "8094:8094"
     volumes:
       - ~/.claude.json:/mcp-configs/.claude.json:ro
       - ~/.gemini:/mcp-configs/.gemini:ro
@@ -78,8 +78,8 @@ services:
       - ./logs:/app/logs:rw
     environment:
       - MCP_CONFIG_DIR=/mcp-configs
-      - MOCK_SERVER_URL=http://mcp-mock-genie:9091
-      - PROXY_SERVER_URL=http://mcp-proxy-spy:9092
+      - MOCK_SERVER_URL=http://mcp-mock-genie:8095
+      - PROXY_SERVER_URL=http://mcp-proxy-spy:8096
     networks:
       - mcp-net
     profiles:
