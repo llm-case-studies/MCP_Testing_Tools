@@ -1,8 +1,18 @@
 # MCP Testing Suite V2
 
-A comprehensive testing environment for Model Context Protocol (MCP) servers with dynamic project launching and Postman-like tool testing.
+A comprehensive, zero-friction testing environment for Model Context Protocol (MCP) servers with Learning Mode, educational content, and Postman-like tool testing.
 
-## Features
+## ✨ New Features
+
+🎓 **Learning Mode** - Zero-friction onboarding with educational teasers and guided tutorials
+⚡ **Zero-Friction Startup** - Just run `./START` and everything works automatically
+🧠 **Educational Content** - "What is MCP?" explanations and step-by-step learning
+🎯 **Adventure-Style Interface** - User-friendly tiles guide you through different use cases
+📚 **Smooth Transitions** - Intelligent progression from Learning to Pro Mode
+✨ **Engaging Teasers** - Beautiful gradient modals that explain value before you commit
+🏗️ **Clean Architecture** - Modern static file structure with proper separation of concerns
+
+## Core Features
 
 🚀 **V2 Dynamic Launcher** - Project-based MCP testing with session management
 🧪 **MCP Postman** - Interactive tool testing interface like Postman for APIs
@@ -13,19 +23,62 @@ A comprehensive testing environment for Model Context Protocol (MCP) servers wit
 📊 **Request History** - Track and replay MCP tool calls
 🔧 **Sample Generation** - Auto-generate test requests from tool schemas
 
-## Quick Start
+## 🚀 Zero-Friction Quick Start
 
+### Option 1: One-Command Startup (Recommended)
 ```bash
 # Clone repository
 git clone <repo>
 cd MCP_Testing_Tools
 
-# Start the launcher
+# Zero-friction startup - handles everything automatically!
+./START
+```
+The script automatically:
+- ✅ Creates virtual environment
+- ✅ Installs dependencies  
+- ✅ Finds available port
+- ✅ Opens browser
+- ✅ Shows adventure-style interface
+
+### Option 2: Manual Setup
+```bash
 cd launcher
 python3 main.py
 ```
 
-Open http://localhost:8094 in your browser to access the Dynamic Launcher.
+Open http://localhost:8094 to access the interface with **Learning Mode** for beginners or **Pro Mode** for advanced users.
+
+## 🎓 Learning Mode Overview
+
+### Educational Journey
+**Learning Mode** provides a guided, zero-friction introduction to MCP:
+
+1. **🧠 MCP Basics** - Understand what MCP is with engaging explanations
+   - Beautiful gradient teaser: "MCP = AI Superpowers!"
+   - 5-minute learning path with clear outcomes
+   - Plain English explanations of complex concepts
+
+2. **🧪 Guided Testing** - Your first MCP tool test with step-by-step guidance
+   - Interactive interface with green highlights
+   - Real MCP tools that actually work
+   - Live guidance tooltips
+
+3. **📚 Explore Examples** - Curated real-world examples
+   - Web scraping & search tools
+   - File system operations
+   - AI assistance integrations
+
+4. **🔍 Troubleshooting** - Solutions for common issues
+   - Connection problems fixes
+   - Configuration issue help
+   - Error message explanations
+
+### Smart Progression
+- **Auto-completion detection**: System tracks your progress intelligently
+- **Pro Mode transition**: Beautiful modal appears when you're ready (70% completion)
+- **User choice**: You decide when to graduate - no pressure!
+- **Persistent preferences**: Remembers your mode choice across sessions
 
 ## Architecture V2
 
@@ -132,6 +185,12 @@ python3 test_mcp_postman_e2e.py                             # End-to-end tests
 - Project scanning and session management
 - MCP Postman UI with modal interface
 - RESTful APIs for frontend interaction
+
+**Static File Architecture**:
+- `static/index.html` - Complete UI structure with Learning Mode tiles
+- `static/style.css` - All styling including responsive design and animations
+- `static/script.js` - All JavaScript functionality (81+ functions)
+- Clean separation of concerns with no inline code
 
 **Backend (`web_interface.py`)**:
 - Dynamic container orchestration  

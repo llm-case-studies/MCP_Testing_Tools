@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Learning Mode Button Test</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            padding: 20px; 
+            max-width: 800px; 
+            margin: 0 auto;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .test-result {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+        .btn { 
+            padding: 10px 20px; 
+            margin: 5px; 
+            border: none; 
+            border-radius: 4px; 
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+        }
+        .btn:hover { background: #0056b3; }
+        #testOutput {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Learning Mode Button Test</h1>
+    <p>This page tests if the Learning Mode buttons are working correctly by loading the actual MCP Testing Suite page.</p>
+    
+    <div class="test-section">
+        <h3>📋 Test Plan</h3>
+        <ol>
+            <li>Load the MCP Testing Suite page in an iframe</li>
+            <li>Check if Learning Mode functions are defined</li>
+            <li>Test if buttons can be clicked programmatically</li>
+            <li>Verify that modals appear</li>
+        </ol>
+    </div>
+    
+    <div class="test-section">
+        <h3>🎮 Manual Tests</h3>
+        <p>Click these buttons to test the Learning Mode functionality:</p>
+        <button class="btn" onclick="testPage()">🔍 Load & Test MCP Suite Page</button>
+        <button class="btn" onclick="testLearningMode()">🎓 Test Learning Mode</button>
+        <button class="btn" onclick="clearOutput()">🧹 Clear Output</button>
+    </div>
+    
+    <div class="test-section">
+        <h3>📊 Test Results</h3>
+        <div id="testOutput">
+            <p><em>Click "Load & Test MCP Suite Page" to start testing...</em></p>
+        </div>
+    </div>
+    
+    <div class="test-section">
+        <h3>🌐 MCP Testing Suite (Live)</h3>
+        <iframe id="mcpFrame" src="http://localhost:8094" width="100%" height="600" style="border: 1px solid #ddd; border-radius: 4px;"></iframe>
+    </div>
+
+    <script>
+        function log(message, isError = false) {
+            const output = document.getElementById('testOutput');
+            const div = document.createElement('div');
+            div.className = isError ? 'test-result error' : 'test-result success';
+            div.innerHTML = `[${new Date().toLocaleTimeString()}] ${message}`;
+            output.appendChild(div);
+            output.scrollTop = output.scrollHeight;
+        }
+        
+        function clearOutput() {
+            document.getElementById('testOutput').innerHTML = '<p><em>Output cleared...</em></p>';
+        }
+        
+        async function testPage() {
+            log('🚀 Starting MCP Testing Suite page tests...');
+            
+            try {
+                // Test 1: Check if page loads
+                log('📡 Testing page connectivity...');
+                const response = await fetch('http://localhost:8094');
+                if (response.ok) {
+                    log('✅ Page loads successfully (HTTP 200)');
+                } else {
+                    log(`❌ Page load failed (HTTP ${response.status})`, true);
+                    return;
+                }
+                
+                // Test 2: Check HTML content
+                const html = await response.text();
+                log('📄 Analyzing page content...');
+                
+                // Check for Learning Mode elements
+                const checks = [
+                    { name: 'Learning Mode Button', pattern: 'id="learningModeBtn"' },
+                    { name: 'Pro Mode Button', pattern: 'id="proModeBtn"' },
+                    { name: 'Learning Mode Chooser', pattern: 'id="learningModeChooser"' },
+                    { name: 'MCP Basics Tile', pattern: 'LEARN MCP BASICS' },
+                    { name: 'startMCPBasics Function', pattern: 'function startMCPBasics(' },
+                    { name: 'startGuidedTesting Function', pattern: 'function startGuidedTesting(' },
+                    { name: 'exploreExamples Function', pattern: 'function exploreExamples(' },
+                    { name: 'troubleshootingHelp Function', pattern: 'function troubleshootingHelp(' }
+                ];
+                
+                let passCount = 0;
+                for (const check of checks) {
+                    if (html.includes(check.pattern)) {
+                        log(`✅ ${check.name} - Found`);
+                        passCount++;
+                    } else {
+                        log(`❌ ${check.name} - Missing`, true);
+                    }
+                }
+                
+                log(`📊 Test Summary: ${passCount}/${checks.length} checks passed`);
+                
+                if (passCount === checks.length) {
+                    log('🎉 All tests passed! Learning Mode buttons should work.');
+                } else {
+                    log('⚠️ Some tests failed. There may be issues with Learning Mode.', true);
+                }
+                
+            } catch (error) {
+                log(`❌ Test failed: ${error.message}`, true);
+            }
+        }
+        
+        function testLearningMode() {
+            log('🎓 Testing Learning Mode interactions...');
+            
+            const iframe = document.getElementById('mcpFrame');
+            try {
+                // Try to access iframe content
+                const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+                
+                if (iframeDoc) {
+                    log('✅ Can access iframe content');
+                    
+                    // Check if Learning Mode button exists
+                    const learningBtn = iframeDoc.getElementById('learningModeBtn');
+                    if (learningBtn) {
+                        log('✅ Learning Mode button found in iframe');
+                        
+                        // Try to click it programmatically
+                        learningBtn.click();
+                        log('🖱️ Clicked Learning Mode button programmatically');
+                        
+                        // Check if Learning Mode chooser is visible
+                        setTimeout(() => {
+                            const chooser = iframeDoc.getElementById('learningModeChooser');
+                            if (chooser && chooser.style.display !== 'none') {
+                                log('✅ Learning Mode chooser is visible');
+                                
+                                // Try clicking MCP Basics
+                                const mcpBasicsTile = chooser.querySelector('[onclick*="startMCPBasics"]');
+                                if (mcpBasicsTile) {
+                                    log('✅ MCP Basics tile found');
+                                    mcpBasicsTile.click();
+                                    log('🖱️ Clicked MCP Basics tile');
+                                    
+                                    // Check for teaser modal after a short delay
+                                    setTimeout(() => {
+                                        const teaser = iframeDoc.getElementById('mcpBasicsTeaser');
+                                        if (teaser) {
+                                            log('🎉 SUCCESS: MCP Basics teaser modal appeared!');
+                                        } else {
+                                            log('⚠️ MCP Basics teaser modal not found', true);
+                                        }
+                                    }, 1000);
+                                } else {
+                                    log('❌ MCP Basics tile not found', true);
+                                }
+                            } else {
+                                log('❌ Learning Mode chooser not visible', true);
+                            }
+                        }, 500);
+                        
+                    } else {
+                        log('❌ Learning Mode button not found in iframe', true);
+                    }
+                } else {
+                    log('❌ Cannot access iframe content (CORS restriction)', true);
+                    log('💡 Try testing manually in the iframe below');
+                }
+            } catch (error) {
+                log(`❌ Error testing Learning Mode: ${error.message}`, true);
+                log('💡 This is likely due to CORS restrictions. Try testing manually in the iframe below.');
+            }
+        }
+        
+        // Auto-test on page load
+        window.onload = function() {
+            setTimeout(testPage, 1000);
+        };
+    </script>
+</body>
+</html>

@@ -15,7 +15,7 @@ import os
 # Add launcher to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from main import app
+from launcher.main import app
 from session_manager import SessionManager
 
 # Create test client
