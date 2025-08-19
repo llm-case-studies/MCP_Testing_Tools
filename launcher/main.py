@@ -19,10 +19,12 @@ import uvicorn
 
 try:
     from .project_scanner import ProjectScanner
-    from .session_manager import SessionManager
+    from .session import SessionManager
+    from .services import LauncherService
 except ImportError:
     from project_scanner import ProjectScanner
-    from session_manager import SessionManager
+    from session import SessionManager
+    from services import LauncherService
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -42,6 +44,7 @@ app.add_middleware(
 # Initialize components
 project_scanner = ProjectScanner()
 session_manager = SessionManager()
+launcher_service = LauncherService(session_manager, project_scanner)
 
 # Models
 class ProjectInfo(BaseModel):
@@ -81,49 +84,10 @@ async def serve_launcher(request: Request):
 async def browse_folders(path: str = "."):
     """Browse directories for folder selection"""
     try:
-        import os
-        from pathlib import Path
-        
-        base_path = Path(path).resolve()
-        if not base_path.exists() or not base_path.is_dir():
-            raise HTTPException(status_code=400, detail="Invalid directory path")
-        
-        folders = []
-        
-        # Add parent directory option (unless at root)
-        if base_path.parent != base_path:
-            folders.append({
-                "name": "..",
-                "path": str(base_path.parent),
-                "type": "parent"
-            })
-        
-        # List subdirectories
-        try:
-            for item in sorted(base_path.iterdir()):
-                if item.is_dir() and not item.name.startswith('.'):
-                    # Check if it looks like a project directory
-                    has_mcp_config = any(
-                        (item / config).exists() 
-                        for config in [".mcp.json", "mcp.json", ".claude.json", "package.json"]
-                    )
-                    
-                    folders.append({
-                        "name": item.name,
-                        "path": str(item),
-                        "type": "project" if has_mcp_config else "folder",
-                        "has_mcp_config": has_mcp_config
-                    })
-        except PermissionError:
-            pass
-        
-        return {
-            "current_path": str(base_path),
-            "folders": folders
-        }
-        
-    except HTTPException:
-        raise
+        result = await launcher_service.browse_folders(path)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error browsing folders: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -132,8 +96,8 @@ async def browse_folders(path: str = "."):
 async def scan_projects(path: str = "."):
     """Scan directory for projects with MCP configurations"""
     try:
-        projects = await project_scanner.scan_directory(path)
-        return {"projects": projects, "scanned_path": path}
+        result = await launcher_service.scan_projects(path)
+        return result
     except Exception as e:
         logger.error(f"Error scanning projects: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -142,8 +106,8 @@ async def scan_projects(path: str = "."):
 async def get_config_preview(config_path: str):
     """Get detailed preview of a configuration file"""
     try:
-        preview = await project_scanner.get_config_preview(config_path)
-        return preview
+        result = await launcher_service.get_config_preview(config_path)
+        return result
     except Exception as e:
         logger.error(f"Error getting config preview: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -152,13 +116,10 @@ async def get_config_preview(config_path: str):
 async def launch_backend(config: LaunchConfig):
     """Launch a testing backend with the specified configuration"""
     try:
-        session = await session_manager.launch_session(config)
-        return {
-            "session_id": session.session_id,
-            "backend_url": session.backend_url,
-            "status": session.status,
-            "message": f"Testing backend launched successfully"
-        }
+        result = await launcher_service.launch_session(config.dict())
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
     except Exception as e:
         logger.error(f"Error launching backend: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -166,44 +127,63 @@ async def launch_backend(config: LaunchConfig):
 @app.get("/api/sessions")
 async def list_sessions():
     """List all testing sessions"""
-    sessions = await session_manager.list_sessions()
-    return {"sessions": sessions}
+    try:
+        result = await launcher_service.list_sessions()
+        return result
+    except Exception as e:
+        logger.error(f"Error listing sessions: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.post("/api/sessions/{session_id}/stop")
 async def stop_session(session_id: str):
     """Stop a testing session"""
     try:
-        await session_manager.stop_session(session_id)
-        return {"message": f"Session {session_id} stopped successfully"}
+        result = await launcher_service.stop_session(session_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Error stopping session: {e}")
-        raise HTTPException(status_code=404, detail=str(e))
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.delete("/api/sessions/{session_id}")
 async def remove_session(session_id: str):
     """Remove a session from tracking"""
     try:
-        await session_manager.remove_session(session_id)
-        return {"message": f"Session {session_id} removed"}
+        result = await launcher_service.remove_session(session_id)
+        return result
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
     except Exception as e:
         logger.error(f"Error removing session: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/api/sessions/{session_id}")
+async def get_session_details(session_id: str):
+    """Get detailed information about a specific session"""
+    try:
+        result = await launcher_service.get_session_details(session_id)
+        return result
+    except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.error(f"Error getting session details: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/health")
 async def health_check():
     """Health check endpoint"""
-    sessions = await session_manager.list_sessions()
-    active_count = len([s for s in sessions if s["status"] in ["starting", "running"]])
-    
-    return {
-        "status": "healthy",
-        "service": "mcp-launcher",
-        "version": "2.0.0",
-        "total_sessions": len(sessions),
-        "active_sessions": active_count,
-        "max_concurrent_sessions": session_manager.max_concurrent_sessions,
-        "sessions_available": session_manager.max_concurrent_sessions - active_count
-    }
+    try:
+        result = await launcher_service.get_health_status()
+        return result
+    except Exception as e:
+        logger.error(f"Error getting health status: {e}")
+        return {
+            "status": "unhealthy",
+            "error": str(e),
+            "service": "mcp-launcher",
+            "version": "2.0.0"
+        }
 
 if __name__ == "__main__":
     import sys
