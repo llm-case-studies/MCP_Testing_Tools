@@ -64,8 +64,7 @@ REM Start the launcher
 echo 🚀 Starting MCP Testing Suite launcher...
 echo.
 
-cd launcher
-start "MCP Testing Suite" python main.py --port=%LAUNCHER_PORT% --auto-open
+start "MCP Testing Suite" python -m launcher.main --port=%LAUNCHER_PORT% --auto-open
 
 REM Wait for launcher to start
 timeout /t 3 /nobreak >nul

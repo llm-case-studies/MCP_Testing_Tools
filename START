@@ -51,7 +51,7 @@ fi
 
 # Kill any existing launcher processes
 echo "🧹 Cleaning up any existing processes..."
-pkill -f "launcher/main.py" 2>/dev/null || true
+pkill -f "launcher.main" 2>/dev/null || true
 sleep 1
 
 # Create virtual environment if it doesn't exist
@@ -87,9 +87,8 @@ export MCP_TESTING_SUITE_DOCKER_AVAILABLE="$DOCKER_AVAILABLE"
 export MCP_TESTING_SUITE_PORT="$LAUNCHER_PORT"
 export MCP_TESTING_SUITE_AUTO_OPEN="true"
 
-# Start launcher in background
-cd launcher
-python3 main.py --port="$LAUNCHER_PORT" --auto-open &
+# Start launcher in background (run as module to support relative imports)
+python3 -m launcher.main --port="$LAUNCHER_PORT" --auto-open &
 LAUNCHER_PID=$!
 
 # Wait for launcher to start
