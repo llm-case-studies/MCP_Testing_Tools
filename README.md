@@ -10,6 +10,7 @@ A comprehensive, zero-friction testing environment for Model Context Protocol (M
 🎯 **Adventure-Style Interface** - User-friendly tiles guide you through different use cases
 📚 **Smooth Transitions** - Intelligent progression from Learning to Pro Mode
 ✨ **Engaging Teasers** - Beautiful gradient modals that explain value before you commit
+🏗️ **Clean Architecture** - Modern static file structure with proper separation of concerns
 
 ## Core Features
 
@@ -184,6 +185,12 @@ python3 test_mcp_postman_e2e.py                             # End-to-end tests
 - Project scanning and session management
 - MCP Postman UI with modal interface
 - RESTful APIs for frontend interaction
+
+**Static File Architecture**:
+- `static/index.html` - Complete UI structure with Learning Mode tiles
+- `static/style.css` - All styling including responsive design and animations
+- `static/script.js` - All JavaScript functionality (81+ functions)
+- Clean separation of concerns with no inline code
 
 **Backend (`web_interface.py`)**:
 - Dynamic container orchestration  

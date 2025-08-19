@@ -13,7 +13,7 @@ from fastapi.testclient import TestClient
 # Import main app
 import sys
 sys.path.append('..')
-from main import app
+from launcher.main import app
 
 @pytest.fixture
 def client():

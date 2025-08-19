@@ -12,3 +12,7 @@ responses>=0.23.0
 
 # For coverage reporting
 pytest-cov>=4.0.0
+
+# For e2e testing with Playwright
+playwright>=1.40.0
+pytest-playwright>=0.4.0
