@@ -238,3 +238,126 @@ input, select {
     70% { box-shadow: 0 0 0 10px rgba(76, 175, 80, 0); }
     100% { box-shadow: 0 0 0 0 rgba(76, 175, 80, 0); }
 }
+
+/* ===================================
+   TEASER MODAL SYSTEM (Phase 2 Refactoring)
+   =================================== */
+
+/* Teaser Overlay */
+.teaser-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 2000;
+}
+
+/* Base Teaser Modal */
+.teaser-modal {
+    margin: 10% auto;
+    padding: 40px;
+    width: 90%;
+    max-width: 600px;
+    border-radius: 16px;
+    text-align: center;
+    color: white;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+/* Teaser Type Specific Backgrounds */
+.teaser-basics {
+    background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%);
+}
+
+.teaser-examples {
+    background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%);
+}
+
+.teaser-troubleshooting {
+    background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%);
+}
+
+/* Teaser Icon */
+.teaser-icon {
+    font-size: 3em;
+    margin-bottom: 20px;
+}
+
+/* Teaser Content */
+.teaser-modal h2 {
+    margin: 0 0 15px 0;
+    color: white;
+}
+
+.teaser-description {
+    font-size: 1.2em;
+    margin-bottom: 25px;
+    opacity: 0.9;
+}
+
+.teaser-highlights {
+    background: rgba(255, 255, 255, 0.1);
+    padding: 20px;
+    border-radius: 12px;
+    margin: 20px 0;
+}
+
+.teaser-highlights p {
+    margin: 0;
+    font-size: 1.1em;
+}
+
+.teaser-highlights p:first-child {
+    margin-bottom: 10px;
+}
+
+/* Teaser Actions */
+.teaser-actions {
+    margin-top: 30px;
+}
+
+.teaser-actions .btn-primary {
+    background: white;
+    color: inherit;
+    border: none;
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    font-weight: bold;
+    margin-right: 15px;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Type-specific primary button colors */
+.teaser-basics .btn-primary {
+    color: #4caf50;
+}
+
+.teaser-examples .btn-primary {
+    color: #ff9800;
+}
+
+.teaser-troubleshooting .btn-primary {
+    color: #9c27b0;
+}
+
+.teaser-actions .btn-secondary {
+    background: transparent;
+    color: white;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    padding: 15px 30px;
+    border-radius: 8px;
+    font-size: 1.1em;
+    cursor: pointer;
+}
+
+.teaser-actions button:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+    transition: all 0.2s ease;
+}
+}

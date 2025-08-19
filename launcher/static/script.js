@@ -501,31 +501,13 @@ function startMCPBasics() {
     showMCPBasicsTeaser();
 }
 
-function showMCPBasicsTeaser() {
-    var teaserHTML = '<div id="mcpBasicsTeaser" style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">' +
-        '<div style="background: linear-gradient(135deg, #4caf50 0%, #66bb6a 100%); margin: 10% auto; padding: 40px; width: 90%; max-width: 600px; border-radius: 16px; text-align: center; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">' +
-        '<div style="font-size: 3em; margin-bottom: 20px;">🧠✨</div>' +
-        '<h2 style="margin: 0 0 15px 0; color: white;">MCP = AI Superpowers!</h2>' +
-        '<p style="font-size: 1.2em; margin-bottom: 25px; opacity: 0.9;">In 5 minutes, you\'ll understand how MCP gives AI assistants the ability to actually DO things - read files, search the web, manage code, and much more!</p>' +
-        '<div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin: 20px 0;">' +
-        '<p style="margin: 0; font-size: 1.1em;"><strong>🎯 What you\'ll learn:</strong></p>' +
-        '<p style="margin: 10px 0 0 0;">✅ What MCP is (in plain English)<br>' +
-        '✅ Why it\'s revolutionary for AI<br>' +
-        '✅ Real examples you can try instantly</p>' +
-        '</div>' +
-        '<div style="margin-top: 30px;">' +
-        '<button onclick="beginMCPBasics()" style="background: white; color: #4caf50; border: none; padding: 15px 30px; border-radius: 8px; font-size: 1.1em; font-weight: bold; margin-right: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">🚀 Let\'s Go!</button>' +
-        '<button onclick="closeMCPBasicsTeaser()" style="background: transparent; color: white; border: 2px solid rgba(255,255,255,0.3); padding: 15px 30px; border-radius: 8px; font-size: 1.1em; cursor: pointer;">Maybe Later</button>' +
-        '</div>' +
-        '</div>' +
-        '</div>';
-    
-    document.body.insertAdjacentHTML('beforeend', teaserHTML);
+// Phase 2 Refactored: Clean template-based teaser function
+async function showMCPBasicsTeaser() {
+    await showModalFromTemplate('mcp-basics-teaser');
 }
 
 function closeMCPBasicsTeaser() {
-    var teaser = document.getElementById('mcpBasicsTeaser');
-    if (teaser) teaser.remove();
+    closeModal('mcpBasicsTeaser');
 }
 
 function beginMCPBasics() {
@@ -576,31 +558,13 @@ function exploreExamples() {
     showExploreExamplesTeaser();
 }
 
-function showExploreExamplesTeaser() {
-    var teaserHTML = '<div id="exploreExamplesTeaser" style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">' +
-        '<div style="background: linear-gradient(135deg, #ff9800 0%, #ffb74d 100%); margin: 10% auto; padding: 40px; width: 90%; max-width: 600px; border-radius: 16px; text-align: center; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">' +
-        '<div style="font-size: 3em; margin-bottom: 20px;">📚🌟</div>' +
-        '<h2 style="margin: 0 0 15px 0; color: white;">Real-World Examples!</h2>' +
-        '<p style="font-size: 1.2em; margin-bottom: 25px; opacity: 0.9;">See MCP in action with curated examples from actual projects! Each example includes detailed explanations and is ready to run instantly.</p>' +
-        '<div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin: 20px 0;">' +
-        '<p style="margin: 0; font-size: 1.1em;"><strong>🎯 Example categories:</strong></p>' +
-        '<p style="margin: 10px 0 0 0;">🔍 Web scraping & search tools<br>' +
-        '📁 File system operations<br>' +
-        '🤖 AI assistance integrations</p>' +
-        '</div>' +
-        '<div style="margin-top: 30px;">' +
-        '<button onclick="beginExploreExamples()" style="background: white; color: #ff9800; border: none; padding: 15px 30px; border-radius: 8px; font-size: 1.1em; font-weight: bold; margin-right: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">🚀 Show Examples!</button>' +
-        '<button onclick="closeExploreExamplesTeaser()" style="background: transparent; color: white; border: 2px solid rgba(255,255,255,0.3); padding: 15px 30px; border-radius: 8px; font-size: 1.1em; cursor: pointer;">Maybe Later</button>' +
-        '</div>' +
-        '</div>' +
-        '</div>';
-    
-    document.body.insertAdjacentHTML('beforeend', teaserHTML);
+// Phase 2 Refactored: Clean template-based teaser function
+async function showExploreExamplesTeaser() {
+    await showModalFromTemplate('explore-examples-teaser');
 }
 
 function closeExploreExamplesTeaser() {
-    var teaser = document.getElementById('exploreExamplesTeaser');
-    if (teaser) teaser.remove();
+    closeModal('exploreExamplesTeaser');
 }
 
 function beginExploreExamples() {
@@ -623,31 +587,13 @@ function troubleshootingHelp() {
     showTroubleshootingTeaser();
 }
 
-function showTroubleshootingTeaser() {
-    var teaserHTML = '<div id="troubleshootingTeaser" style="display: block; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); z-index: 2000;">' +
-        '<div style="background: linear-gradient(135deg, #9c27b0 0%, #ba68c8 100%); margin: 10% auto; padding: 40px; width: 90%; max-width: 600px; border-radius: 16px; text-align: center; color: white; box-shadow: 0 8px 32px rgba(0,0,0,0.3);">' +
-        '<div style="font-size: 3em; margin-bottom: 20px;">🔍🛠️</div>' +
-        '<h2 style="margin: 0 0 15px 0; color: white;">Troubleshooting Made Easy!</h2>' +
-        '<p style="font-size: 1.2em; margin-bottom: 25px; opacity: 0.9;">Stuck? Don\'t worry! I\'ve got solutions for the most common MCP setup and testing issues. Most problems have simple fixes!</p>' +
-        '<div style="background: rgba(255,255,255,0.1); padding: 20px; border-radius: 12px; margin: 20px 0;">' +
-        '<p style="margin: 0; font-size: 1.1em;"><strong>🎯 Common fixes for:</strong></p>' +
-        '<p style="margin: 10px 0 0 0;">🔗 Connection problems<br>' +
-        '⚙️ Configuration issues<br>' +
-        '🐛 Error message explanations</p>' +
-        '</div>' +
-        '<div style="margin-top: 30px;">' +
-        '<button onclick="beginTroubleshooting()" style="background: white; color: #9c27b0; border: none; padding: 15px 30px; border-radius: 8px; font-size: 1.1em; font-weight: bold; margin-right: 15px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">🚀 Get Help!</button>' +
-        '<button onclick="closeTroubleshootingTeaser()" style="background: transparent; color: white; border: 2px solid rgba(255,255,255,0.3); padding: 15px 30px; border-radius: 8px; font-size: 1.1em; cursor: pointer;">Maybe Later</button>' +
-        '</div>' +
-        '</div>' +
-        '</div>';
-    
-    document.body.insertAdjacentHTML('beforeend', teaserHTML);
+// Phase 2 Refactored: Clean template-based teaser function
+async function showTroubleshootingTeaser() {
+    await showModalFromTemplate('troubleshooting-teaser');
 }
 
 function closeTroubleshootingTeaser() {
-    var teaser = document.getElementById('troubleshootingTeaser');
-    if (teaser) teaser.remove();
+    closeModal('troubleshootingTeaser');
 }
 
 function beginTroubleshooting() {
