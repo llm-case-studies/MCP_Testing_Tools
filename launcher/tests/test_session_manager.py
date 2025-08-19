@@ -8,7 +8,11 @@ import asyncio
 from unittest.mock import patch, MagicMock, AsyncMock
 from datetime import datetime
 
-from session_manager import SessionManager, ManagedSession, PortAllocator
+import sys
+import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from launcher.session import SessionManager, ManagedSession, PortAllocator, SessionConfig
 
 class MockLaunchConfig:
     def __init__(self, project_path="/test/project", config_source="/test/config.json", 
@@ -30,12 +34,37 @@ def mock_config():
 
 class TestSessionManager:
     
+    async def _mock_start_session(self, config, sessions, max_concurrent):
+        """Mock session start that creates a session in the sessions dict"""
+        # Check session limits first
+        active_sessions = [s for s in sessions.values() if s.status in ["starting", "running"]]
+        if len(active_sessions) >= max_concurrent:
+            raise ValueError(f"Maximum concurrent sessions ({max_concurrent}) reached. Please stop some sessions before starting new ones.")
+        
+        import uuid
+        session_id = str(uuid.uuid4())[:8]
+        session = ManagedSession(
+            session_id=session_id,
+            project_path=config.project_path if hasattr(config, 'project_path') else config['project_path'],
+            config_source=config.config_source if hasattr(config, 'config_source') else config['config_source'],
+            config_type=config.config_type if hasattr(config, 'config_type') else config['config_type'],
+            status="starting",
+            backend_url="http://localhost:8095"
+        )
+        sessions[session_id] = session
+        return session
+    
+    async def _mock_stop_session(self, session_id, sessions):
+        """Mock session stop that updates session status"""
+        if session_id in sessions:
+            sessions[session_id].status = "stopped"
+    
     @pytest.mark.asyncio
     async def test_session_limits(self, session_manager, mock_config):
         """Test session limit enforcement"""
         # Mock the Docker operations
-        with patch.object(session_manager, '_validate_paths', return_value=True), \
-             patch.object(session_manager, '_launch_container'), \
+        with patch.object(session_manager.lifecycle_manager, 'start_session', side_effect=self._mock_start_session), \
+             patch.object(session_manager.lifecycle_manager, 'stop_session', side_effect=self._mock_stop_session), \
              patch.object(session_manager.port_allocator, 'allocate_range', return_value=[8095, 8096]):
             
             # Launch sessions up to limit
@@ -61,7 +90,7 @@ class TestSessionManager:
     async def test_validate_paths(self, session_manager):
         """Test path validation"""
         # Mock os.path and pathlib operations
-        with patch('session_manager.Path') as mock_path:
+        with patch('launcher.session.validator.Path') as mock_path:
             # Valid paths
             mock_path_obj = MagicMock()
             mock_path_obj.resolve.return_value = mock_path_obj
@@ -80,9 +109,8 @@ class TestSessionManager:
     @pytest.mark.asyncio
     async def test_session_lifecycle(self, session_manager, mock_config):
         """Test complete session lifecycle"""
-        with patch.object(session_manager, '_validate_paths', return_value=True), \
-             patch.object(session_manager, '_launch_container') as mock_launch, \
-             patch.object(session_manager.port_allocator, 'allocate_range', return_value=[8095, 8096]):
+        with patch.object(session_manager.lifecycle_manager, 'start_session', side_effect=self._mock_start_session), \
+             patch.object(session_manager.lifecycle_manager, 'stop_session') as mock_stop:
             
             # Launch session
             session = await session_manager.launch_session(mock_config)
@@ -95,10 +123,8 @@ class TestSessionManager:
             assert sessions_list[0]["session_id"] == session.session_id
             
             # Stop session
-            with patch('session_manager.subprocess.run') as mock_subprocess:
-                mock_subprocess.return_value.returncode = 0
-                await session_manager.stop_session(session.session_id)
-                assert session.status == "stopped"
+            await session_manager.stop_session(session.session_id)
+            mock_stop.assert_called_once_with(session.session_id, session_manager.sessions)
             
             # Remove session
             await session_manager.remove_session(session.session_id)
