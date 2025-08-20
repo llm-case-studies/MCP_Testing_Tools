@@ -39,7 +39,7 @@ graph TB
     end
 
     subgraph "Docker Network: mcp-net"
-        subgraph "MCP-Debug-Wizard Container"
+        subgraph "MCP-Suite-Debug-Wizard Container"
             WP[Web Portal<br/>:9090<br/>FastAPI + React]
             MG[Mock Genie<br/>:9091<br/>HTTP MCP Simulator]
             PS[Proxy Spy<br/>:9092<br/>stdio Interceptor]

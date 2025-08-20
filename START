@@ -49,9 +49,9 @@ if [ "$LAUNCHER_PORT" != "8094" ]; then
     echo -e "${YELLOW}⚠️  Port 8094 busy, using port $LAUNCHER_PORT${NC}"
 fi
 
-# Kill any existing launcher processes
-echo "🧹 Cleaning up any existing processes..."
-pkill -f "launcher.main" 2>/dev/null || true
+# Kill any existing launcher containers
+echo "🧹 Cleaning up any existing containers..."
+docker stop $(docker ps -q --filter ancestor=mcp-suite-launcher) 2>/dev/null || true
 sleep 1
 
 # Create virtual environment if it doesn't exist
@@ -87,9 +87,32 @@ export MCP_TESTING_SUITE_DOCKER_AVAILABLE="$DOCKER_AVAILABLE"
 export MCP_TESTING_SUITE_PORT="$LAUNCHER_PORT"
 export MCP_TESTING_SUITE_AUTO_OPEN="true"
 
-# Start launcher in background (run as module to support relative imports)
-python3 -m launcher.main --port="$LAUNCHER_PORT" --auto-open &
-LAUNCHER_PID=$!
+# Build launcher image if it doesn't exist
+if ! docker images | grep -q "mcp-suite-launcher"; then
+    echo "🔨 Building launcher Docker image..."
+    docker build -t mcp-suite-launcher .
+fi
+
+# Start launcher in container with Docker socket access
+echo "🐳 Starting launcher container..."
+docker run -d \
+    --name "MCP-Suite-Launcher-$(date +%s)" \
+    --rm \
+    -p "$LAUNCHER_PORT:8094" \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v "$(pwd):/host-workspace:rw" \
+    -v ~/.claude.json:/mcp-configs/.claude.json:ro \
+    -v ~/.gemini:/mcp-configs/.gemini:ro \
+    -e MCP_TESTING_SUITE_DOCKER_AVAILABLE="$DOCKER_AVAILABLE" \
+    -e MCP_TESTING_SUITE_PORT="8094" \
+    -e MCP_TESTING_SUITE_AUTO_OPEN="false" \
+    -e RUNNING_IN_CONTAINER="true" \
+    -e HOST_WORKSPACE_PATH="/host-workspace" \
+    mcp-suite-launcher \
+    python -m launcher.main --host 0.0.0.0 --port 8094
+
+# Get container ID for cleanup
+LAUNCHER_PID=$(docker ps -q --filter ancestor=mcp-suite-launcher | head -n1)
 
 # Wait for launcher to start
 echo "⏳ Waiting for launcher to start..."
@@ -98,7 +121,7 @@ sleep 3
 # Check if launcher started successfully
 if ! lsof -i :$LAUNCHER_PORT >/dev/null 2>&1; then
     echo -e "${RED}❌ Failed to start launcher${NC}"
-    kill $LAUNCHER_PID 2>/dev/null || true
+    docker stop $LAUNCHER_PID 2>/dev/null || true
     exit 1
 fi
 
@@ -131,11 +154,12 @@ echo "   🔒 Enterprise - Security & policy enforcement"
 echo ""
 echo -e "${YELLOW}💡 TIP: Try the demo modes if you don't have MCP servers yet!${NC}"
 echo ""
-echo "To stop: Press Ctrl+C or run: kill $LAUNCHER_PID"
+echo "To stop: Press Ctrl+C or run: docker stop $LAUNCHER_PID"
 echo ""
 
 # Keep script running to handle Ctrl+C
-trap "echo ''; echo '🛑 Stopping MCP Testing Suite...'; kill $LAUNCHER_PID 2>/dev/null || true; exit 0" INT
+trap "echo ''; echo '🛑 Stopping MCP Testing Suite...'; docker stop $LAUNCHER_PID 2>/dev/null || true; exit 0" INT
 
-# Wait for launcher process
-wait $LAUNCHER_PID
+# Wait for launcher container
+echo "Container ID: $LAUNCHER_PID"
+docker wait $LAUNCHER_PID 2>/dev/null || true

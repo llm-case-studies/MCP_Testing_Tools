@@ -1,0 +1,60 @@
+# Reduce build context size
+.git
+.gitignore
+*.md
+.venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+build
+develop-eggs
+dist
+downloads
+eggs
+.eggs
+lib
+lib64
+parts
+sdist
+var
+wheels
+*.egg-info
+.installed.cfg
+*.egg
+
+# Node modules and build artifacts
+node_modules
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE files
+.vscode
+.idea
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Test files and coverage
+.coverage
+.pytest_cache
+htmlcov
+.tox
+.nox
+
+# Logs and temporary files
+logs
+session-logs
+*.log
+tmp
+temp
+
+# Development workspace
+workspace
+tests/__pycache__
+tests/*.pyc

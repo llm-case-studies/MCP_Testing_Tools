@@ -3,7 +3,7 @@ version: '3.8'
 services:
   mcp-debug-wizard:
     build: .
-    container_name: "MCP-Debug-Wizard"
+    container_name: "MCP-Suite-Debug-Wizard"
     ports:
       - "8094:8094"  # Main web interface (avoiding conflicts)
       - "8095:8095"  # Mock server
@@ -36,7 +36,7 @@ services:
   # Optional: Run all three services separately for debugging
   mcp-mock-genie:
     build: .
-    container_name: "MCP-Mock-Genie"
+    container_name: "MCP-Suite-Mock-Genie"
     command: ["python", "mock_server.py"]
     ports:
       - "8095:8095"
@@ -49,7 +49,7 @@ services:
 
   mcp-proxy-spy:
     build: .
-    container_name: "MCP-Proxy-Spy"
+    container_name: "MCP-Suite-Proxy-Spy"
     command: ["python", "mcp_proxy.py"]
     ports:
       - "8096:8096"
@@ -67,7 +67,7 @@ services:
 
   mcp-web-portal:
     build: .
-    container_name: "MCP-Web-Portal"
+    container_name: "MCP-Suite-Web-Portal"
     command: ["python", "web_interface.py"]
     ports:
       - "8094:8094"
@@ -78,8 +78,8 @@ services:
       - ./logs:/app/logs:rw
     environment:
       - MCP_CONFIG_DIR=/mcp-configs
-      - MOCK_SERVER_URL=http://mcp-mock-genie:8095
-      - PROXY_SERVER_URL=http://mcp-proxy-spy:8096
+      - MOCK_SERVER_URL=http://mcp-suite-mock-genie:8095
+      - PROXY_SERVER_URL=http://mcp-suite-proxy-spy:8096
     networks:
       - mcp-net
     profiles:

@@ -67,7 +67,7 @@ graph TB
 
 ## 🏗️ Component Architecture
 
-### **Stage 1: Project Launcher** (MCP-Web-Portal)
+### **Stage 1: Project Launcher** (MCP-Suite-Web-Portal)
 **Role**: Smart configuration selector and backend launcher
 **Technology**: FastAPI + Simple React UI
 **Port**: 8094 (always available)
@@ -107,12 +107,12 @@ graph TB
 ```bash
 # Generated dynamically based on user selection
 docker run --rm \
-  --name "mcp-backend-$(date +%s)" \
+  --name "MCP-Suite-Testing-$(date +%s)" \
   -v "/selected/project/path:/workspace:rw" \
   -v "/selected/config/path:/mcp-configs:ro" \
   -v "./session-logs:/app/logs:rw" \
   -p 8095-8096:8095-8096 \
-  mcp-testing-backend
+  mcp-suite-testing
 ```
 
 ## 🔄 User Workflow
@@ -120,7 +120,7 @@ docker run --rm \
 ### **1. Initial Launch**
 ```bash
 # Start lightweight launcher (no project dependencies)
-docker run -p 8094:8094 mcp-project-launcher
+docker run -p 8094:8094 mcp-suite-launcher
 ```
 
 ### **2. Project Selection** (Web UI at :8094)
@@ -233,7 +233,7 @@ def launch_testing_backend(config: LaunchConfig):
     # Create dynamic Docker command
     docker_cmd = [
         "docker", "run", "--rm", "-d",
-        f"--name=mcp-backend-{session_id}",
+        f"--name=MCP-Suite-Testing-{session_id}",
         f"-v={config.project_path}:/workspace:rw",
         f"-v={config.config_source}:/mcp-configs:ro", 
         f"-v=./session-{session_id}-logs:/app/logs:rw",

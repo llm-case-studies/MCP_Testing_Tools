@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "serena-mcp-bridged": {
+      "transport": {
+        "type": "sse",
+        "url": "http://localhost:8099/sse"
+      }
+    }
+  }
+}

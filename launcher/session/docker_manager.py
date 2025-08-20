@@ -4,6 +4,7 @@ Handles Docker network and container operations
 """
 
 import logging
+import os
 import subprocess
 from pathlib import Path
 from typing import Optional, Tuple
@@ -16,7 +17,7 @@ class DockerManager:
     """Manages Docker network and container operations for testing sessions"""
     
     def __init__(self, network_name: str = "mcp-launcher-net", 
-                 backend_image: str = "mcp-testing-backend"):
+                 backend_image: str = "mcp-suite-testing"):
         self.network_name = network_name
         self.backend_image = backend_image
         self._network_initialized = False
@@ -58,15 +59,32 @@ class DockerManager:
                 await self.ensure_network()
             
             # Prepare Docker command
-            container_name = f"mcp-backend-{session.session_id}"
+            container_name = f"MCP-Suite-Testing-{session.session_id}"
             
             # Resolve absolute paths
             project_path = Path(session.project_path).resolve()
             config_path = Path(session.config_source).resolve()
             
+            # Check if we're running in a container (launcher containerized)
+            # If so, translate container paths to host paths
+            if os.getenv('RUNNING_IN_CONTAINER', 'false') == 'true':
+                # Translate paths from container to host
+                host_workspace = os.getenv('HOST_WORKSPACE_PATH', '/host-workspace')
+                if str(project_path).startswith('/app'):
+                    # Project path is relative to the launcher workspace
+                    project_path = Path(host_workspace) / Path(session.project_path).relative_to('/app')
+                if str(config_path).startswith('/app'):
+                    # Config path is relative to the launcher workspace  
+                    config_path = Path(host_workspace) / Path(session.config_source).relative_to('/app')
+            
             # Create logs directory for this session
             logs_dir = Path("./session-logs") / session.session_id
             logs_dir.mkdir(parents=True, exist_ok=True)
+            
+            # Translate logs directory if running in container
+            if os.getenv('RUNNING_IN_CONTAINER', 'false') == 'true':
+                host_workspace = os.getenv('HOST_WORKSPACE_PATH', '/host-workspace')
+                logs_dir = Path(host_workspace) / "session-logs" / session.session_id
             
             docker_cmd = [
                 "docker", "run", "-d",

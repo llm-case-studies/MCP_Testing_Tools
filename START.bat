@@ -26,9 +26,9 @@ if not exist "launcher\main.py" (
 REM Find available port (start from 8094)
 set LAUNCHER_PORT=8094
 
-REM Kill any existing launcher processes
-echo 🧹 Cleaning up any existing processes...
-taskkill /f /im python.exe >nul 2>&1
+REM Kill any existing launcher containers
+echo 🧹 Cleaning up any existing containers...
+for /f %%i in ('docker ps -q --filter ancestor=mcp-suite-launcher 2^>nul') do docker stop %%i >nul 2>&1
 
 REM Create virtual environment if it doesn't exist
 if not exist ".venv" (
@@ -64,7 +64,16 @@ REM Start the launcher
 echo 🚀 Starting MCP Testing Suite launcher...
 echo.
 
-start "MCP Testing Suite" python -m launcher.main --port=%LAUNCHER_PORT% --auto-open
+REM Build launcher image if it doesn't exist
+docker images | findstr mcp-suite-launcher >nul 2>&1
+if errorlevel 1 (
+    echo 🔨 Building launcher Docker image...
+    docker build -t mcp-suite-launcher .
+)
+
+REM Start launcher in container
+echo 🐳 Starting launcher container...
+docker run -d --name MCP-Suite-Launcher-%RANDOM% --rm -p %LAUNCHER_PORT%:8094 -v /var/run/docker.sock:/var/run/docker.sock -v "%CD%:/host-workspace:rw" -v "%USERPROFILE%\.claude.json:/mcp-configs/.claude.json:ro" -e MCP_TESTING_SUITE_DOCKER_AVAILABLE=%DOCKER_AVAILABLE% -e MCP_TESTING_SUITE_PORT=8094 -e MCP_TESTING_SUITE_AUTO_OPEN=false -e RUNNING_IN_CONTAINER=true -e HOST_WORKSPACE_PATH=/host-workspace mcp-suite-launcher python -m launcher.main --host 0.0.0.0 --port 8094
 
 REM Wait for launcher to start
 timeout /t 3 /nobreak >nul
