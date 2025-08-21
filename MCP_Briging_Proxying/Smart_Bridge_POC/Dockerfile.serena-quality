@@ -1,0 +1,131 @@
+# DevOps Paradise - Enhanced Serena Quality Container
+# Combines Serena semantic analysis with comprehensive testing and quality tools
+
+FROM python:3.11-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    curl \
+    git \
+    jq \
+    wget \
+    gnupg \
+    software-properties-common \
+    build-essential \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Node.js 18+ for JavaScript tooling
+RUN curl -fsSL https://deb.nodesource.com/setup_18.x | bash - \
+    && apt-get install -y nodejs
+
+# Install Docker CLI for container orchestration
+RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg \
+    && echo "deb [arch=amd64 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian bullseye stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null \
+    && apt-get update \
+    && apt-get install -y docker-ce-cli \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Python quality and testing tools
+RUN pip install --no-cache-dir \
+    # Core Serena and MCP
+    uvx \
+    # Testing frameworks
+    pytest>=7.0.0 \
+    pytest-cov>=4.0.0 \
+    pytest-xdist>=3.0.0 \
+    pytest-html>=3.0.0 \
+    pytest-json-report>=1.5.0 \
+    coverage>=7.0.0 \
+    # Code quality tools
+    pylint>=2.17.0 \
+    flake8>=6.0.0 \
+    black>=23.0.0 \
+    isort>=5.12.0 \
+    mypy>=1.0.0 \
+    # Security scanning
+    bandit>=1.7.0 \
+    safety>=2.3.0 \
+    pip-audit>=2.6.0 \
+    # Performance analysis
+    memory-profiler>=0.60.0 \
+    line-profiler>=4.0.0 \
+    # API testing
+    requests>=2.31.0 \
+    httpx>=0.24.0 \
+    # Utilities
+    rich>=13.0.0 \
+    click>=8.1.0 \
+    pydantic>=2.0.0 \
+    fastapi>=0.100.0 \
+    uvicorn>=0.23.0
+
+# Install JavaScript/TypeScript quality and testing tools
+RUN npm install -g \
+    # Testing frameworks
+    jest@^29.0.0 \
+    @playwright/test@^1.37.0 \
+    newman@^5.3.0 \
+    # Code quality tools
+    eslint@^8.45.0 \
+    @typescript-eslint/parser@^6.2.0 \
+    @typescript-eslint/eslint-plugin@^6.2.0 \
+    prettier@^3.0.0 \
+    # Performance analysis
+    lighthouse@^10.4.0 \
+    clinic@^12.0.0 \
+    autocannon@^7.12.0 \
+    # Build tools
+    typescript@^5.1.0 \
+    vite@^4.4.0 \
+    webpack@^5.88.0 \
+    # Utilities
+    cross-env@^7.0.3 \
+    rimraf@^5.0.0
+
+# Install Playwright browsers
+RUN npx playwright install --with-deps chromium firefox webkit
+
+# Install Serena MCP using uvx
+RUN uvx --python python3.11 install serena
+
+# Create directories for workspace and reports
+RUN mkdir -p /workspace /app/reports /app/configs /app/templates
+
+# Copy quality orchestrator and supporting files
+COPY quality_orchestrator.py /app/
+COPY quality_analyzers.py /app/
+COPY test_runners.py /app/
+COPY report_generator.py /app/
+COPY bridge_integration.py /app/
+COPY health_monitor.py /app/
+
+# Copy configuration templates
+COPY configs/ /app/configs/
+COPY templates/ /app/templates/
+
+# Copy startup and health check scripts
+COPY scripts/start_serena_quality.sh /app/
+COPY scripts/health_check.sh /app/
+RUN chmod +x /app/*.sh
+
+# Environment variables
+ENV PYTHONPATH=/app
+ENV NODE_PATH=/usr/local/lib/node_modules
+ENV SERENA_PORT=24282
+ENV DASHBOARD_PORT=8000
+ENV WORKSPACE_PATH=/workspace
+ENV REPORTS_PATH=/app/reports
+ENV LOG_LEVEL=INFO
+
+# Expose ports
+EXPOSE 24282 8000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD /app/health_check.sh
+
+# Start command
+CMD ["/app/start_serena_quality.sh"]

@@ -1,0 +1,170 @@
+version: '3.8'
+
+services:
+  # Main DevOps Paradise Bridge - manages multiple clients
+  devops-paradise-bridge:
+    build:
+      context: .
+      dockerfile: Dockerfile.bridge
+    ports:
+      - "8100:8100"  # Main bridge management port
+    environment:
+      - BRIDGE_HOST=0.0.0.0
+      - BRIDGE_PORT=8100
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - BRIDGE_MODE=multi_client
+      - LOG_LEVEL=INFO
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./logs:/app/logs
+      - ./client_configs:/app/client_configs
+    networks:
+      - devops-paradise
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8100/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Redis for session management and caching
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - devops-paradise
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+
+  # PostgreSQL for client management and analytics
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      - POSTGRES_DB=devops_paradise
+      - POSTGRES_USER=bridge_user
+      - POSTGRES_PASSWORD=secure_bridge_pass
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - devops-paradise
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bridge_user -d devops_paradise"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  # Prometheus for metrics collection
+  prometheus:
+    image: prom/prometheus:latest
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    networks:
+      - devops-paradise
+    restart: unless-stopped
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/etc/prometheus/console_libraries'
+      - '--web.console.templates=/etc/prometheus/consoles'
+      - '--web.enable-lifecycle'
+
+  # Grafana for monitoring dashboard
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_PASSWORD=admin123
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./monitoring/grafana/dashboards:/etc/grafana/provisioning/dashboards
+      - ./monitoring/grafana/datasources:/etc/grafana/provisioning/datasources
+    networks:
+      - devops-paradise
+    restart: unless-stopped
+    depends_on:
+      - prometheus
+
+  # Nginx reverse proxy for unified access
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf
+      - ./nginx/ssl:/etc/nginx/ssl
+      - ./nginx/static:/var/www/static
+    networks:
+      - devops-paradise
+    restart: unless-stopped
+    depends_on:
+      - devops-paradise-bridge
+      - grafana
+
+volumes:
+  redis_data:
+    driver: local
+  postgres_data:
+    driver: local
+  prometheus_data:
+    driver: local
+  grafana_data:
+    driver: local
+
+networks:
+  devops-paradise:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+
+# Template for client-specific services (created dynamically)
+x-serena-quality-template: &serena-quality-template
+  build:
+    context: .
+    dockerfile: Dockerfile.serena-quality
+  environment:
+    - SERENA_PORT=24282
+    - DASHBOARD_PORT=8000
+    - WORKSPACE_PATH=/workspace
+    - CLIENT_ID=${CLIENT_ID}
+    - QUALITY_PROFILE=${QUALITY_PROFILE:-comprehensive}
+  volumes:
+    - ${WORKSPACE_PATH}:/workspace:rw
+    - /var/run/docker.sock:/var/run/docker.sock  # For nested containers if needed
+  networks:
+    - devops-paradise
+  restart: unless-stopped
+  healthcheck:
+    test: ["CMD", "curl", "-f", "http://localhost:24282/health"]
+    interval: 30s
+    timeout: 10s
+    retries: 3
+  deploy:
+    resources:
+      limits:
+        cpus: '2.0'
+        memory: 4G
+      reservations:
+        cpus: '0.5'
+        memory: 1G
+
+# Example client services (these will be created dynamically by the bridge)
+# serena-quality-client-alex-1692834567:
+#   <<: *serena-quality-template
+#   ports:
+#     - "8201:24282"  # Serena MCP
+#     - "8202:8000"   # Dashboard
+#   environment:
+#     - CLIENT_ID=alex-1692834567
+#     - WORKSPACE_PATH=/workspace
