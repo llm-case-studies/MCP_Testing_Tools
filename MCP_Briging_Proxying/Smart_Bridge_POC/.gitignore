@@ -1,0 +1,11 @@
+# Ignore log files and directories
+Smart_Bridge_Logs/
+*.log
+*.log.*
+
+# Ignore disabled bridge files
+*.disabled
+
+# Ignore test output
+test_configs/logs/
+/tmp/test_logs/

@@ -1,0 +1,127 @@
+{
+  "session_management_test_scenarios": [
+    {
+      "name": "basic_session_logging",
+      "description": "Test that all new sessions are properly logged",
+      "bridge_config": {
+        "port": 9200,
+        "log_level": "DEBUG",
+        "log_location": "/tmp/session_test_logs",
+        "cmd": "echo test"
+      },
+      "test_clients": [
+        {
+          "name": "claude_code_client",
+          "user_agent": "Claude Code/1.0",
+          "priority": "high",
+          "expected_logs": [
+            "New SSE connection from",
+            "Created new session",
+            "User-Agent: Claude Code/1.0",
+            "priority high"
+          ]
+        },
+        {
+          "name": "generic_client",
+          "user_agent": "Generic MCP Client",
+          "priority": "normal",
+          "expected_logs": [
+            "Created new session",
+            "priority normal"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "priority_queue_testing",
+      "description": "Test priority-based request queueing",
+      "bridge_config": {
+        "port": 9201,
+        "queue_strategy": "priority",
+        "max_queue_size": 50,
+        "log_level": "DEBUG"
+      },
+      "test_messages": [
+        {
+          "priority": "high",
+          "method": "tools/list",
+          "expected_processing_order": 1
+        },
+        {
+          "priority": "normal",
+          "method": "resources/list", 
+          "expected_processing_order": 3
+        },
+        {
+          "priority": "high",
+          "method": "initialize",
+          "expected_processing_order": 2
+        }
+      ]
+    },
+    {
+      "name": "session_timeout_testing",
+      "description": "Test session timeout and cleanup",
+      "bridge_config": {
+        "port": 9202,
+        "session_timeout": 5,
+        "log_level": "INFO"
+      },
+      "test_steps": [
+        "Create session",
+        "Wait 6 seconds", 
+        "Check session still exists (should be cleaned up)",
+        "Verify cleanup logs"
+      ]
+    },
+    {
+      "name": "multi_client_coordination",
+      "description": "Test multiple clients sharing singleton bridge",
+      "bridge_config": {
+        "port": 9203,
+        "queue_strategy": "round_robin",
+        "max_queue_size": 100,
+        "log_level": "DEBUG"
+      },
+      "concurrent_clients": 3,
+      "messages_per_client": 5,
+      "expected_behaviors": [
+        "All clients get unique session IDs",
+        "Messages are logged with client identification",
+        "Round-robin request processing",
+        "Session isolation maintained"
+      ]
+    }
+  ],
+  
+  "validation_criteria": {
+    "session_logging": {
+      "must_log": [
+        "session creation with client details",
+        "user agent information",
+        "priority level",
+        "message routing with session ID"
+      ]
+    },
+    "priority_queueing": {
+      "high_priority": "processed before normal priority",
+      "same_priority": "FIFO order maintained",
+      "queue_overflow": "proper error handling"
+    },
+    "session_management": {
+      "unique_ids": "every session gets unique ID",
+      "cleanup": "expired sessions are removed",
+      "isolation": "sessions don't interfere with each other"
+    }
+  },
+  
+  "bridge_startup_command_template": {
+    "base": "python3 simple_bridge.py",
+    "required_args": ["--port", "--cmd"],
+    "optional_args": [
+      "--log_level", "--log_location", 
+      "--queue_strategy", "--max_queue_size", "--session_timeout"
+    ],
+    "example": "python3 simple_bridge.py --port 9200 --cmd 'echo test' --log_level DEBUG --queue_strategy priority"
+  }
+}
