@@ -25,6 +25,14 @@
 - [ ] Integration test compatibility
 - [ ] Performance monitoring hooks
 
+### **Content Filtering Requirements** (when applicable):
+- [ ] Blacklist filtering with configurable rules
+- [ ] Content sanitization (scripts, ads, tracking removal)
+- [ ] PII redaction with pattern matching
+- [ ] Response size management and summarization
+- [ ] Comprehensive audit logging for all filtering actions
+- [ ] Performance impact < 20% for typical responses
+
 ### **Logging Requirements**:
 ```python
 # Required log format
