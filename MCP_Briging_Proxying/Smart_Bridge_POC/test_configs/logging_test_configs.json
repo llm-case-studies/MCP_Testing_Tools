@@ -1,0 +1,108 @@
+{
+  "logging_test_scenarios": [
+    {
+      "name": "debug_console_only",
+      "description": "Debug level logging to console only",
+      "bridge_args": {
+        "port": 9100,
+        "log_level": "DEBUG"
+      },
+      "expected_behaviors": [
+        "All message payloads logged",
+        "Session creation details logged",
+        "SSE connection details logged"
+      ]
+    },
+    {
+      "name": "info_with_file",
+      "description": "Info level logging with file output",
+      "bridge_args": {
+        "port": 9101,
+        "log_level": "INFO",
+        "log_location": "/tmp/mcp_bridge_test_logs"
+      },
+      "expected_behaviors": [
+        "Message summaries logged (not full payloads)",
+        "Log file created in specified location",
+        "Connection events logged"
+      ]
+    },
+    {
+      "name": "warning_level",
+      "description": "Warning level - minimal logging",
+      "bridge_args": {
+        "port": 9102,
+        "log_level": "WARNING"
+      },
+      "expected_behaviors": [
+        "Only warnings and errors logged",
+        "Normal operations not logged"
+      ]
+    },
+    {
+      "name": "production_logging",
+      "description": "Production-like logging configuration",
+      "bridge_args": {
+        "port": 9103,
+        "log_level": "INFO",
+        "log_location": "/var/log/mcp-bridges"
+      },
+      "test_messages": [
+        {
+          "description": "MCP initialize",
+          "payload": {
+            "jsonrpc": "2.0",
+            "id": "init-1",
+            "method": "initialize",
+            "params": {
+              "protocolVersion": "2024-11-05",
+              "capabilities": {},
+              "clientInfo": {"name": "test-client", "version": "1.0.0"}
+            }
+          }
+        },
+        {
+          "description": "Tools list request",
+          "payload": {
+            "jsonrpc": "2.0",
+            "id": "tools-1",
+            "method": "tools/list"
+          }
+        },
+        {
+          "description": "Invalid JSON",
+          "payload": "invalid json",
+          "expect_error": true
+        }
+      ]
+    }
+  ],
+  
+  "logging_validation_rules": {
+    "DEBUG": {
+      "must_contain": [
+        "Full message payload",
+        "Auto-created SSE session",
+        "Starting SSE stream"
+      ],
+      "must_not_contain": []
+    },
+    "INFO": {
+      "must_contain": [
+        "Received message from",
+        "SSE connection from",
+        "Starting Simple MCP Bridge"
+      ],
+      "must_not_contain": [
+        "Full message payload"
+      ]
+    },
+    "WARNING": {
+      "must_contain": [],
+      "must_not_contain": [
+        "Received message from",
+        "Full message payload"
+      ]
+    }
+  }
+}

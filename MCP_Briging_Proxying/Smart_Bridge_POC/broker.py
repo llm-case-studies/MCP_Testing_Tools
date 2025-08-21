@@ -103,7 +103,8 @@ class Broker:
             return
         sess = self.sessions[session_id]
         try:
-            data = f"data: {json.dumps(obj, ensure_ascii=False)}\n\n".encode("utf-8")
+            # Format as proper MCP SSE message event
+            data = f"event: message\ndata: {json.dumps(obj, ensure_ascii=False)}\n\n".encode("utf-8")
             await sess.queue.put(data)
         except asyncio.QueueFull:
             logger.warning("Session %s SSE queue full; dropping message", session_id)
