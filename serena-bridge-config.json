@@ -1,0 +1,34 @@
+{
+  "mcpServers": {
+    "serena-bridge": {
+      "type": "sse",
+      "url": "http://localhost:8101/sse",
+      "description": "🌉 DevOps Paradise - Serena Semantic Analysis Bridge with Quality Tools",
+      "capabilities": [
+        "semantic_code_analysis",
+        "intelligent_code_insights", 
+        "project_understanding",
+        "code_quality_assessment",
+        "architecture_analysis",
+        "dependency_mapping",
+        "documentation_generation",
+        "refactoring_suggestions",
+        "technical_debt_analysis",
+        "performance_optimization"
+      ],
+      "use_cases": [
+        "Analyze codebase architecture and dependencies with semantic understanding",
+        "Generate intelligent code insights and improvement recommendations", 
+        "Understand project structure and identify optimization opportunities",
+        "Assess code quality across multiple languages and frameworks",
+        "Create comprehensive documentation from code analysis",
+        "Identify technical debt and suggest refactoring strategies",
+        "Perform semantic search and code relationship mapping",
+        "Generate architecture diagrams and dependency visualizations",
+        "Optimize performance based on code analysis patterns",
+        "Provide AI-powered code review and quality assessment"
+      ],
+      "best_for": "When you need deep semantic code analysis, intelligent project insights, or comprehensive code quality assessment with AI-powered recommendations"
+    }
+  }
+}

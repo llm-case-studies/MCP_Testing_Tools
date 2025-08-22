@@ -1,0 +1,46 @@
+{
+  "blocked_domains": [
+    "ads.example.com",
+    "malware.test.com",
+    "tracking.evil.com",
+    "spam.site.net",
+    "suspicious.domain.com",
+    "untrusted.site.org",
+    "clickbait.news.fake"
+  ],
+  "blocked_keywords": [
+    "malicious",
+    "virus",
+    "exploit",
+    "phishing",
+    "scam",
+    "fraud",
+    "hack",
+    "malware",
+    "trojan",
+    "ransomware"
+  ],
+  "blocked_patterns": [
+    "(?i)(?:bitcoin|crypto|ethereum)\\s+(?:wallet|address|private\\s+key)",
+    "(?i)click\\s+here\\s+to\\s+(?:win|claim|download)",
+    "javascript:.*(?:alert|confirm|prompt)\\(",
+    "(?i)urgent.*(?:action|response).*required",
+    "(?i)congratulations.*(?:winner|selected|chosen)"
+  ],
+  "remove_scripts": true,
+  "remove_tracking": true,
+  "remove_ads": true,
+  "normalize_whitespace": true,
+  "redact_emails": true,
+  "redact_phones": true,
+  "redact_ssns": true,
+  "redact_credit_cards": true,
+  "max_response_length": 10000,
+  "summarize_threshold": 3000,
+  "preserve_structure": true,
+  "enable_caching": true,
+  "cache_ttl": 600,
+  "log_blocked_content": true,
+  "log_pii_redactions": true,
+  "log_response_summaries": true
+}
