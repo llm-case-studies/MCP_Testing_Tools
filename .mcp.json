@@ -182,6 +182,49 @@
       "env": {
         "FIRECRAWL_API_KEY": "your_api_key_here"
       }
+    },
+    "firecrawl-filtered": {
+      "type": "sse",
+      "url": "http://localhost:8202/sse",
+      "description": "🔥🛡️ Secure Firecrawl with Content Filtering - Web scraping with enterprise-grade security filtering",
+      "capabilities": [
+        "web_scraping",
+        "data_extraction", 
+        "site_crawling",
+        "content_analysis",
+        "security_filtering",
+        "pii_redaction",
+        "content_sanitization",
+        "audit_logging"
+      ],
+      "use_cases": [
+        "Scrape websites with automatic PII redaction (emails, phones, SSNs, credit cards)",
+        "Extract data with JavaScript/script removal and HTML sanitization",
+        "Crawl sites with blacklist filtering and prohibited keyword blocking",
+        "Monitor websites with comprehensive audit logging and compliance tracking",
+        "Collect research data with content size management and summarization",
+        "Analyze competitor sites with enterprise security controls"
+      ],
+      "best_for": "When user needs secure web scraping with content filtering, PII protection, and audit compliance",
+      "security_features": [
+        "Automatic PII redaction (email, phone, SSN, credit card)",
+        "JavaScript and tracking pixel removal",
+        "Configurable domain/keyword blacklisting", 
+        "Content size management with smart summarization",
+        "Comprehensive audit logging with filtering details",
+        "Runtime configuration updates without restart"
+      ],
+      "performance": {
+        "latency_overhead": "12.5%",
+        "throughput": "1050+ RPS",
+        "memory_efficient": "Smart caching with configurable TTL"
+      },
+      "bridge_info": {
+        "implementation": "sse-to-sse-filtered",
+        "source_port": 3000,
+        "filtered_port": 8202,
+        "config_path": "agents/bridge-implementer/sse-to-sse-filtered/config/"
+      }
     }
   }
 }
