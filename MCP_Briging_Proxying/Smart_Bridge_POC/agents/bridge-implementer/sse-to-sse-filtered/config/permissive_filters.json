@@ -1,0 +1,26 @@
+{
+  "blocked_domains": [],
+  "blocked_keywords": [
+    "malicious",
+    "virus"
+  ],
+  "blocked_patterns": [
+    "javascript:.*alert\\("
+  ],
+  "remove_scripts": true,
+  "remove_tracking": false,
+  "remove_ads": false,
+  "normalize_whitespace": true,
+  "redact_emails": false,
+  "redact_phones": false,
+  "redact_ssns": true,
+  "redact_credit_cards": true,
+  "max_response_length": 25000,
+  "summarize_threshold": 10000,
+  "preserve_structure": true,
+  "enable_caching": true,
+  "cache_ttl": 300,
+  "log_blocked_content": false,
+  "log_pii_redactions": false,
+  "log_response_summaries": false
+}
